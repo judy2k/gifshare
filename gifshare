@@ -1,0 +1,31 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+gifshare - Share Gifs via Amazon S3
+
+Usage:
+    gifshare [options]
+    gifshare [options] <path>
+    
+    gifshare [-h | --help]
+    gifshare --version
+
+Options:
+    -h --help       show this
+    -v --verbose    print out more stuff
+
+"""
+
+
+import boto
+from docopt import docopt
+
+
+def main():
+    arguments = docopt(__doc__, version='gifshare 0.0.0')
+    print arguments
+
+
+if __name__ == '__main__':
+    main()
