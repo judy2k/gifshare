@@ -5,10 +5,12 @@
 gifshare - Share Gifs via Amazon S3
 
 Usage:
-    gifshare [options] <path>
-    
-    gifshare [-h | --help]
+    gifshare [options] PATH [KEY]
+    gifshare (-h | --help)
     gifshare --version
+
+Arguments:
+    PATH    The path to a file to upload
 
 Options:
     -h --help       show this
@@ -16,26 +18,113 @@ Options:
 
 """
 
-
 from ConfigParser import SafeConfigParser
-from os.path import expanduser
+import logging
+from os.path import expanduser, isfile, basename, splitext
+import re
 
-import boto
+from boto.s3.key import Key
+from boto.s3.connection import S3Connection
 from docopt import docopt
+import magic
+import requests
+
+
+class UnknownFileType(Exception): pass
+
+
+class FileAlreadyExists(Exception): pass
+
+
+URL_RE = re.compile(r'^http.*')
+CONTENT_TYPE_MAP = {
+    'gif': 'image/gif',
+    'jpeg': 'image/jpeg',
+    'png': 'image/png',
+}
+LOG = logging.getLogger('gifshare')
+
+
+def correct_ext(data, is_buffer=False):
+    magic_output = magic.from_buffer(data) if is_buffer else magic.from_file(
+        data)
+    match = re.search(r'JPEG|GIF|PNG', magic_output)
+    if match:
+        return match.group(0).lower()
+    else:
+        raise UnknownFileType("Unknown file type: {}".format(magic_output))
 
 
 def load_config():
     config = SafeConfigParser()
     config.read([expanduser('~/.gifshare'), '.gifshare'])
+    return config
 
 
-def upload_file(path):
-    pass
+def download_file(url):
+    LOG.debug("Downloading image ...")
+    return requests.get(url).content
+
+
+def get_name_from_url(url):
+    return re.match(r'.*/([^/\.]+)', url).group(1)
+
+
+def upload_url(config, url, name=None):
+    data = download_file(url)
+    ext = correct_ext(data, True)
+    filename = (name or get_name_from_url(url)) + '.' + ext
+    dest_url = config.get('default', 'web_root') + filename
+    key = key_for(config, filename, CONTENT_TYPE_MAP[ext])
+    LOG.debug("Uploading image ...")
+    key.set_contents_from_string(data)
+
+    return dest_url
+
+
+def upload_file(config, path, name=None):
+    LOG.debug("Uploading file ...")
+    ext = correct_ext(path)
+    filename = (name or splitext(basename(path))[0]) + '.' + ext
+    url = config.get('default', 'web_root') + filename
+    key_for(config, filename, CONTENT_TYPE_MAP[ext])
+    key.set_contents_from_filename(path)
+
+    return url
+
+
+def key_for(config, filename, content_type):
+    key_id = config.get('default', 'aws_access_id')
+    access_key = config.get('default', 'aws_secret_access_key')
+    bucket_name = config.get('default', 'bucket')
+    conn = S3Connection(key_id, access_key)
+    bucket = conn.get_bucket(bucket_name)
+    k = Key(bucket, filename)
+    k.content_type = content_type
+    if k.exists():
+        url = config.get('default', 'web_root') + filename
+        raise FileAlreadyExists("File at {} already exists!".format(url))
+    else:
+        return k
 
 
 def main():
     arguments = docopt(__doc__, version='gifshare 0.0.0')
-    print arguments
+    config = load_config()
+
+    logging.basicConfig()
+    LOG.setLevel(
+        level=logging.DEBUG if arguments['--verbose'] else logging.WARN)
+
+    path = arguments['PATH']
+    if not URL_RE.match(path):
+        if isfile(path):
+            print upload_file(config, path, arguments['KEY'])
+        else:
+            raise IOError(
+                '{} does not exist or is not a file!'.format(path))
+    else:
+        print upload_url(config, path, arguments['KEY'])
 
 
 if __name__ == '__main__':
