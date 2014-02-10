@@ -13,3 +13,5 @@ GifShare To-Do List
 * Ability to delete uploaded images.
 * Automatically paste urls into the pasteboard.
 * Option to automatically open the browser to the uploaded image.
+* Allow uploading to different S3 buckets
+* Support other cloud hosting providers

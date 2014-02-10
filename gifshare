@@ -24,11 +24,13 @@ from ConfigParser import SafeConfigParser
 import logging
 from os.path import expanduser, isfile, basename, splitext
 import re
+from StringIO import StringIO
 
 from boto.s3.key import Key
 from boto.s3.connection import S3Connection
 from docopt import docopt
 import magic
+import progressbar
 import requests
 
 
@@ -65,7 +67,19 @@ def load_config():
 
 def download_file(url):
     LOG.debug("Downloading image ...")
-    return requests.get(url).content
+    response = requests.get(url, stream=True)
+    length = int(response.headers['content-length'])
+    content = StringIO()
+    i = 0
+    widgets = ['Downloading image ', progressbar.Bar(), progressbar.Percentage()]
+    pbar = progressbar.ProgressBar(widgets=widgets, maxval=length).start()
+    for chunk in response.iter_content(64):
+        i += len(chunk)
+        content.write(chunk)
+        pbar.update(i)
+    pbar.finish()
+
+    return content.getvalue()
 
 
 def get_name_from_url(url):
