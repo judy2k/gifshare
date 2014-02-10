@@ -87,7 +87,7 @@ def upload_file(config, path, name=None):
     ext = correct_ext(path)
     filename = (name or splitext(basename(path))[0]) + '.' + ext
     url = config.get('default', 'web_root') + filename
-    key_for(config, filename, CONTENT_TYPE_MAP[ext])
+    key = key_for(config, filename, CONTENT_TYPE_MAP[ext])
     key.set_contents_from_filename(path)
 
     return url
