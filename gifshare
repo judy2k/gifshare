@@ -16,6 +16,8 @@ Options:
     -h --help       show this
     -v --verbose    print out more stuff
 
+Copyright (c) 2014 by Mark Smith
+MIT Licensed, see LICENSE.txt for more details.
 """
 
 from ConfigParser import SafeConfigParser
