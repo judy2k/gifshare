@@ -1,6 +1,8 @@
+*.pyc
+.dev_activate
 .gifshare
 .idea
-env
-gifshare.pyc
 README.html
 TODO.html
+env
+venv

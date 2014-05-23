@@ -93,7 +93,20 @@ def upload_url(config, url, name=None):
     dest_url = config.get('default', 'web_root') + filename
     key = key_for(config, filename, CONTENT_TYPE_MAP[ext])
     LOG.debug("Uploading image ...")
-    key.set_contents_from_string(data)
+
+    widgets = ['Uploading image ', progressbar.Bar(), progressbar.Percentage()]
+    pbar = [None]
+
+    def callback(update, total):
+        if pbar[0] is None:
+            pbar[0] = progressbar.ProgressBar(widgets=widgets, maxval=total)
+            pbar[0].start()
+        else:
+            pbar[0].update(update)
+        if update == total:
+            pbar[0].finish()
+
+    key.set_contents_from_string(data, cb=callback)
 
     return dest_url
 
