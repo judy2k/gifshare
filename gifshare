@@ -3,32 +3,26 @@
 
 """
 gifshare - Share Gifs via Amazon S3
+"""
 
-Usage:
-    gifshare [options] PATH [KEY]
-    gifshare (-h | --help)
-    gifshare --version
-
-Arguments:
-    PATH    The path to a file to upload
-
-Options:
-    -h --help       show this
-    -v --verbose    print out more stuff
-
-Copyright (c) 2014 by Mark Smith
+FOOTER = """
+Copyright (c) 2014 by Mark Smith.
 MIT Licensed, see LICENSE.txt for more details.
 """
 
+__version__ = '0.0.1'
+
+import argparse
 from ConfigParser import SafeConfigParser
 import logging
 from os.path import expanduser, isfile, basename, splitext
 import re
 from StringIO import StringIO
+import sys
 
 from boto.s3.key import Key
 from boto.s3.connection import S3Connection
-from docopt import docopt
+
 import magic
 import progressbar
 import requests
@@ -69,6 +63,7 @@ def download_file(url):
     LOG.debug("Downloading image ...")
     response = requests.get(url, stream=True)
     length = int(response.headers['content-length'])
+    print 'Content length:', length
     content = StringIO()
     i = 0
     widgets = ['Downloading image ', progressbar.Bar(), progressbar.Percentage()]
@@ -137,23 +132,38 @@ def key_for(config, filename, content_type):
         return k
 
 
-def main():
-    arguments = docopt(__doc__, version='gifshare 0.0.0')
+def main(argv=sys.argv[1:]):
+    a_parser = argparse.ArgumentParser(description=__doc__, epilog=FOOTER)
+    a_parser.add_argument('--version', action='version', version='%(prog)s ' + __version__)
+
+    a_parser.add_argument('-v', '--verbose',
+                          action='store_true',
+                          help='print out more stuff')
+
+    a_parser.add_argument('path',
+                          help='The path to a file to upload')
+
+    a_parser.add_argument('key',
+                          nargs='?',
+                          help='A nice filename for the gif.')
+
+    arguments = a_parser.parse_args(argv)
+
     config = load_config()
 
     logging.basicConfig()
     LOG.setLevel(
-        level=logging.DEBUG if arguments['--verbose'] else logging.WARN)
+        level=logging.DEBUG if arguments.verbose else logging.WARN)
 
-    path = arguments['PATH']
+    path = arguments.path
     if not URL_RE.match(path):
         if isfile(path):
-            print upload_file(config, path, arguments['KEY'])
+            print upload_file(config, path, arguments.key)
         else:
             raise IOError(
                 '{} does not exist or is not a file!'.format(path))
     else:
-        print upload_url(config, path, arguments['KEY'])
+        print upload_url(config, path, arguments.key)
 
 
 if __name__ == '__main__':
