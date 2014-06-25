@@ -5,7 +5,6 @@ GifShare To-Do List
 * Allow usage of AWS environment vars for authentication.
 * Allow usage of boto AWS config.
 
-* Write a setup.py file.
 * Upload to PyPI
 
 * Detect a url or image binary data on the clipboard and upload.

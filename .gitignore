@@ -1,8 +1,12 @@
+*.egg-info
 *.pyc
 .dev_activate
 .gifshare
 .idea
+.vagrant
 README.html
 TODO.html
+build
+dist
 env
 venv
