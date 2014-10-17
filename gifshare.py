@@ -28,10 +28,12 @@ import progressbar
 import requests
 
 
-class UnknownFileType(Exception): pass
+class UnknownFileType(Exception):
+    pass
 
 
-class FileAlreadyExists(Exception): pass
+class FileAlreadyExists(Exception):
+    pass
 
 
 URL_RE = re.compile(r'^http.*')
@@ -132,29 +134,7 @@ def key_for(config, filename, content_type):
         return k
 
 
-def main(argv=sys.argv[1:]):
-    a_parser = argparse.ArgumentParser(description=__doc__, epilog=FOOTER)
-    a_parser.add_argument('--version', action='version', version='%(prog)s ' + __version__)
-
-    a_parser.add_argument('-v', '--verbose',
-                          action='store_true',
-                          help='print out more stuff')
-
-    a_parser.add_argument('path',
-                          help='The path to a file to upload')
-
-    a_parser.add_argument('key',
-                          nargs='?',
-                          help='A nice filename for the gif.')
-
-    arguments = a_parser.parse_args(argv)
-
-    config = load_config()
-
-    logging.basicConfig()
-    LOG.setLevel(
-        level=logging.DEBUG if arguments.verbose else logging.WARN)
-
+def command_upload(arguments, config):
     path = arguments.path
     if not URL_RE.match(path):
         if isfile(path):
@@ -164,6 +144,49 @@ def main(argv=sys.argv[1:]):
                 '{} does not exist or is not a file!'.format(path))
     else:
         print upload_url(config, path, arguments.key)
+
+
+def command_list(arguments, config):
+    pass
+
+
+def main(argv=sys.argv[1:]):
+    a_parser = argparse.ArgumentParser(description=__doc__, epilog=FOOTER)
+    a_parser.add_argument(
+        '--version',
+        action='version',
+        version='%(prog)s ' + __version__)
+
+    a_parser.add_argument(
+        '-v', '--verbose',
+        action='store_true',
+        help='print out more stuff')
+
+    subparsers = a_parser.add_subparsers()
+
+    upload_parser = subparsers.add_parser("upload")
+    upload_parser.set_defaults(target=command_upload)
+
+    upload_parser.add_argument(
+        'path',
+        help='The path to a file to upload')
+
+    upload_parser.add_argument(
+        'key',
+        nargs='?',
+        help='A nice filename for the gif.')
+
+    list_parser = subparsers.add_parser("list")
+    list_parser.set_defaults(target=command_list)
+
+    arguments = a_parser.parse_args(argv)
+    config = load_config()
+
+    logging.basicConfig()
+    LOG.setLevel(
+        level=logging.DEBUG if arguments.verbose else logging.WARN)
+
+    arguments.target(arguments, config)
 
 
 if __name__ == '__main__':
