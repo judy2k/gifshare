@@ -134,6 +134,17 @@ def key_for(config, filename, content_type):
         return k
 
 
+def list(config):
+    key_id = config.get('default', 'aws_access_id')
+    access_key = config.get('default', 'aws_secret_access_key')
+    bucket_name = config.get('default', 'bucket')
+    conn = S3Connection(key_id, access_key)
+    bucket = conn.get_bucket(bucket_name)
+    for key in bucket.list():
+        url = config.get('default', 'web_root') + key.name
+        print url
+
+
 def command_upload(arguments, config):
     path = arguments.path
     if not URL_RE.match(path):
@@ -147,7 +158,7 @@ def command_upload(arguments, config):
 
 
 def command_list(arguments, config):
-    pass
+    list(config)
 
 
 def main(argv=sys.argv[1:]):
