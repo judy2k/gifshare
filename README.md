@@ -41,24 +41,29 @@ Usage
 
 The most common usages are probably the following:
 
-    gifshare /path/to/my.gif
+    gifshare upload /path/to/my.gif
 
 ... will upload my.gif to your S3 bucket, and print out the URL of the
 uploaded gif.
 
-    gifshare http://funnygifz.guru/a/funny.gif
+    gifshare upload http://funnygifz.guru/a/funny.gif
 
 ... will upload funny.gif to your S3 bucket and print out the URL of the
 uploaded gif.
 
 You can rename a file with a second argument - do not add the filetype suffix!
 
-    gifshare /path/to/my.gif kitty-hates-whales
+    gifshare upload /path/to/my.gif kitty-hates-whales
 
 ... will upload my.gif to your S3 bucket with the new name
 'kitty-hates-whales.gif'.  If the file *isn't* a gif, it will rename it with
 the correct suffix - one of .gif, .jpeg, or .png. If your file isn't one of
 these types, gifshare will exit with an error.
+
+You can list all the images you have stored in your S3 bucket with the 'list'
+subcommand:
+
+	gifshare list
 
 ### Advanced Usage
 
@@ -66,7 +71,7 @@ You'll usually want the new URL on your clipboard so you can paste it into your
 IRC channel or wherever. Because gifshare prints out the new URL, you can pipe
 it to your operating system's clipboard utility! On OSX, this is:
 
-    gifshare /path/to/my.gif funniest-gif-evarr | pbcopy
+    gifshare upload /path/to/my.gif funniest-gif-evarr | pbcopy
 
 When gifshare has completed the upload, you can then switch to your chat app
 and hit paste. Funny pic goodness, guaranteed.
