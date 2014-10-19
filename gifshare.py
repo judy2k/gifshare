@@ -83,18 +83,9 @@ def get_name_from_url(url):
     return re.match(r'.*/([^/\.]+)', url).group(1)
 
 
-def upload_url(config, url, name=None):
-    data = download_file(url)
-    ext = correct_ext(data, True)
-    filename = (name or get_name_from_url(url)) + '.' + ext
-    dest_url = config.get('default', 'web_root') + filename
-    key = key_for(config, filename, CONTENT_TYPE_MAP[ext])
-    if key.exists():
-        raise FileAlreadyExists("File at {} already exists!".format(dest_url))
-    LOG.debug("Uploading image ...")
-
-    widgets = ['Uploading image ', progressbar.Bar(), progressbar.Percentage()]
+def upload_callback():
     pbar = [None]
+    widgets = ['Uploading image ', progressbar.Bar(), progressbar.Percentage()]
 
     def callback(update, total):
         if pbar[0] is None:
@@ -105,7 +96,21 @@ def upload_url(config, url, name=None):
         if update == total:
             pbar[0].finish()
 
-    key.set_contents_from_string(data, cb=callback)
+    return callback
+
+
+def upload_url(config, url, name=None):
+    data = download_file(url)
+    ext = correct_ext(data, True)
+    filename = (name or get_name_from_url(url)) + '.' + ext
+    dest_url = config.get('default', 'web_root') + filename
+    bucket = Bucket(config)
+    key = bucket.key_for(filename, CONTENT_TYPE_MAP[ext])
+    if key.exists():
+        raise FileAlreadyExists("File at {} already exists!".format(dest_url))
+    LOG.debug("Uploading image ...")
+
+    key.set_contents_from_string(data, cb=upload_callback())
 
     return dest_url
 
@@ -115,34 +120,39 @@ def upload_file(config, path, name=None):
     ext = correct_ext(path)
     filename = (name or splitext(basename(path))[0]) + '.' + ext
     url = config.get('default', 'web_root') + filename
-    key = key_for(config, filename, CONTENT_TYPE_MAP[ext])
+    bucket = Bucket(config)
+    key = bucket.key_for(filename, CONTENT_TYPE_MAP[ext])
     if key.exists():
         raise FileAlreadyExists("File at {} already exists!".format(url))
-    key.set_contents_from_filename(path)
+    key.set_contents_from_filename(path, cb=upload_callback())
 
     return url
 
 
-def key_for(config, filename, content_type):
-    key_id = config.get('default', 'aws_access_id')
-    access_key = config.get('default', 'aws_secret_access_key')
-    bucket_name = config.get('default', 'bucket')
-    conn = S3Connection(key_id, access_key)
-    bucket = conn.get_bucket(bucket_name)
-    k = Key(bucket, filename)
-    k.content_type = content_type
-    return k
+class Bucket(object):
+    def __init__(self, config):
+        self._bucket = None
+        self._key_id = config.get('default', 'aws_access_id')
+        self._access_key = config.get('default', 'aws_secret_access_key')
+        self._bucket_name = config.get('default', 'bucket')
 
+    @property
+    def bucket(self):
+        if not self._bucket:
+            conn = S3Connection(self._key_id, self._access_key)
+            self._bucket = conn.get_bucket(self._bucket_name)
+        return self._bucket
 
-def list(config):
-    key_id = config.get('default', 'aws_access_id')
-    access_key = config.get('default', 'aws_secret_access_key')
-    bucket_name = config.get('default', 'bucket')
-    conn = S3Connection(key_id, access_key)
-    bucket = conn.get_bucket(bucket_name)
-    for key in bucket.list():
-        url = config.get('default', 'web_root') + key.name
-        print url
+    def key_for(self, filename, content_type):
+        k = Key(self.bucket, filename)
+        k.content_type = content_type
+        return k
+
+    def list(self):
+        bucket = self.bucket
+        for key in bucket.list():
+            url = config.get('default', 'web_root') + key.name
+            print url
 
 
 def command_upload(arguments, config):
