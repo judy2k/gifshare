@@ -28,11 +28,19 @@ import progressbar
 import requests
 
 
-class UnknownFileType(Exception):
+class UserException(Exception):
+    """
+    Indicates that the user should not see a stack-trace - just the
+    exception message.
+    """
     pass
 
 
-class FileAlreadyExists(Exception):
+class UnknownFileType(UserException):
+    pass
+
+
+class FileAlreadyExists(UserException):
     pass
 
 
@@ -172,43 +180,47 @@ def command_list(arguments, config):
 
 
 def main(argv=sys.argv[1:]):
-    a_parser = argparse.ArgumentParser(description=__doc__, epilog=FOOTER)
-    a_parser.add_argument(
-        '--version',
-        action='version',
-        version='%(prog)s ' + __version__)
+    try:
+        a_parser = argparse.ArgumentParser(description=__doc__, epilog=FOOTER)
+        a_parser.add_argument(
+            '--version',
+            action='version',
+            version='%(prog)s ' + __version__)
 
-    a_parser.add_argument(
-        '-v', '--verbose',
-        action='store_true',
-        help='print out more stuff')
+        a_parser.add_argument(
+            '-v', '--verbose',
+            action='store_true',
+            help='print out more stuff')
 
-    subparsers = a_parser.add_subparsers()
+        subparsers = a_parser.add_subparsers()
 
-    upload_parser = subparsers.add_parser("upload")
-    upload_parser.set_defaults(target=command_upload)
+        upload_parser = subparsers.add_parser("upload")
+        upload_parser.set_defaults(target=command_upload)
 
-    upload_parser.add_argument(
-        'path',
-        help='The path to a file to upload')
+        upload_parser.add_argument(
+            'path',
+            help='The path to a file to upload')
 
-    upload_parser.add_argument(
-        'key',
-        nargs='?',
-        help='A nice filename for the gif.')
+        upload_parser.add_argument(
+            'key',
+            nargs='?',
+            help='A nice filename for the gif.')
 
-    list_parser = subparsers.add_parser("list")
-    list_parser.set_defaults(target=command_list)
+        list_parser = subparsers.add_parser("list")
+        list_parser.set_defaults(target=command_list)
 
-    arguments = a_parser.parse_args(argv)
-    config = load_config()
+        arguments = a_parser.parse_args(argv)
+        config = load_config()
 
-    logging.basicConfig()
-    LOG.setLevel(
-        level=logging.DEBUG if arguments.verbose else logging.WARN)
+        logging.basicConfig()
+        LOG.setLevel(
+            level=logging.DEBUG if arguments.verbose else logging.WARN)
 
-    arguments.target(arguments, config)
+        arguments.target(arguments, config)
+    except UserException as ue:
+        print >> sys.stderr, ue
+        return 1
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())
