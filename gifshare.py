@@ -89,6 +89,8 @@ def upload_url(config, url, name=None):
     filename = (name or get_name_from_url(url)) + '.' + ext
     dest_url = config.get('default', 'web_root') + filename
     key = key_for(config, filename, CONTENT_TYPE_MAP[ext])
+    if key.exists():
+        raise FileAlreadyExists("File at {} already exists!".format(dest_url))
     LOG.debug("Uploading image ...")
 
     widgets = ['Uploading image ', progressbar.Bar(), progressbar.Percentage()]
@@ -114,6 +116,8 @@ def upload_file(config, path, name=None):
     filename = (name or splitext(basename(path))[0]) + '.' + ext
     url = config.get('default', 'web_root') + filename
     key = key_for(config, filename, CONTENT_TYPE_MAP[ext])
+    if key.exists():
+        raise FileAlreadyExists("File at {} already exists!".format(url))
     key.set_contents_from_filename(path)
 
     return url
@@ -127,11 +131,7 @@ def key_for(config, filename, content_type):
     bucket = conn.get_bucket(bucket_name)
     k = Key(bucket, filename)
     k.content_type = content_type
-    if k.exists():
-        url = config.get('default', 'web_root') + filename
-        raise FileAlreadyExists("File at {} already exists!".format(url))
-    else:
-        return k
+    return k
 
 
 def list(config):
