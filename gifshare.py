@@ -107,14 +107,14 @@ def upload_callback():
     return callback
 
 
-def upload_url(config, url, name=None):
+def upload_url(config, url, name=None, force=False):
     data = download_file(url)
     ext = correct_ext(data, True)
     filename = (name or get_name_from_url(url)) + '.' + ext
     dest_url = config.get('default', 'web_root') + filename
     bucket = Bucket(config)
     key = bucket.key_for(filename, CONTENT_TYPE_MAP[ext])
-    if key.exists():
+    if key.exists() and force == False:
         raise FileAlreadyExists("File at {} already exists!".format(dest_url))
     LOG.debug("Uploading image ...")
 
@@ -123,14 +123,14 @@ def upload_url(config, url, name=None):
     return dest_url
 
 
-def upload_file(config, path, name=None):
+def upload_file(config, path, name=None, force=False):
     LOG.debug("Uploading file ...")
     ext = correct_ext(path)
     filename = (name or splitext(basename(path))[0]) + '.' + ext
     url = config.get('default', 'web_root') + filename
     bucket = Bucket(config)
     key = bucket.key_for(filename, CONTENT_TYPE_MAP[ext])
-    if key.exists():
+    if key.exists() and force == False:
         raise FileAlreadyExists("File at {} already exists!".format(url))
     key.set_contents_from_filename(path, cb=upload_callback())
 
@@ -167,12 +167,14 @@ def command_upload(arguments, config):
     path = arguments.path
     if not URL_RE.match(path):
         if isfile(path):
-            print upload_file(config, path, arguments.key)
+            print upload_file(
+                config, path, arguments.key, force=arguments.force)
         else:
             raise IOError(
                 '{} does not exist or is not a file!'.format(path))
     else:
-        print upload_url(config, path, arguments.key)
+        print upload_url(
+            config, path, arguments.key, force=arguments.force)
 
 
 def command_list(arguments, config):
@@ -196,6 +198,10 @@ def main(argv=sys.argv[1:]):
 
         upload_parser = subparsers.add_parser("upload")
         upload_parser.set_defaults(target=command_upload)
+
+        upload_parser.add_argument(
+            '--force', '-f', action='store_true', default=False,
+            help='Overwrite any existing files if necessary.')
 
         upload_parser.add_argument(
             'path',
