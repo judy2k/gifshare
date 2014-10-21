@@ -14,6 +14,7 @@ Easy Wins
 Bigger Jobs
 -----------
 * Upload to PyPI
+* Add the ability to create and initialise an S3 bucket, and possibly Route 53.
 * Detect a url or image binary data on the clipboard and upload.
 * Automatically paste urls into the pasteboard.
 * Allow uploading to different S3 buckets
