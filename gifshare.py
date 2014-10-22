@@ -143,6 +143,7 @@ class Bucket(object):
         self._key_id = config.get('default', 'aws_access_id')
         self._access_key = config.get('default', 'aws_secret_access_key')
         self._bucket_name = config.get('default', 'bucket')
+        self._web_root = config.get('default', 'web_root')
 
     @property
     def bucket(self):
@@ -159,7 +160,7 @@ class Bucket(object):
     def list(self):
         bucket = self.bucket
         for key in bucket.list():
-            url = config.get('default', 'web_root') + key.name
+            url = self._web_root + key.name
             print url
 
 
@@ -178,7 +179,8 @@ def command_upload(arguments, config):
 
 
 def command_list(arguments, config):
-    list(config)
+    bucket = Bucket(config)
+    bucket.list()
 
 
 def main(argv=sys.argv[1:]):
