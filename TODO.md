@@ -3,6 +3,7 @@ GifShare To-Do List
 
 Easy Wins
 ---------
+* Tests!
 * Add 'ls' functionality to 'list' subcommand. (Like file-size, etc.)
 * Check stdout TTY status, and adjust output accordingly.
 * Option to automatically open the browser to the uploaded image.
