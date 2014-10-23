@@ -16,6 +16,7 @@ import argparse
 from ConfigParser import SafeConfigParser
 import logging
 from os.path import expanduser, isfile, basename, splitext
+import random
 import re
 from StringIO import StringIO
 import sys
@@ -161,7 +162,7 @@ class Bucket(object):
         bucket = self.bucket
         for key in bucket.list():
             url = self._web_root + key.name
-            print url
+            yield url
 
 
 def command_upload(arguments, config):
@@ -180,7 +181,11 @@ def command_upload(arguments, config):
 
 def command_list(arguments, config):
     bucket = Bucket(config)
-    bucket.list()
+    if not arguments.random:
+        for item in bucket.list():
+            print item
+    else:
+        print random.choice(list(bucket.list()))
 
 
 def main(argv=sys.argv[1:]):
@@ -215,6 +220,7 @@ def main(argv=sys.argv[1:]):
             help='A nice filename for the gif.')
 
         list_parser = subparsers.add_parser("list")
+        list_parser.add_argument('-r', '--random', action='store_true')
         list_parser.set_defaults(target=command_list)
 
         arguments = a_parser.parse_args(argv)
