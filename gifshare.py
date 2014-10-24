@@ -115,7 +115,7 @@ def upload_url(config, url, name=None, force=False):
     dest_url = config.get('default', 'web_root') + filename
     bucket = Bucket(config)
     key = bucket.key_for(filename, CONTENT_TYPE_MAP[ext])
-    if key.exists() and force == False:
+    if key.exists() and not force:
         raise FileAlreadyExists("File at {} already exists!".format(dest_url))
     LOG.debug("Uploading image ...")
 
@@ -131,7 +131,7 @@ def upload_file(config, path, name=None, force=False):
     url = config.get('default', 'web_root') + filename
     bucket = Bucket(config)
     key = bucket.key_for(filename, CONTENT_TYPE_MAP[ext])
-    if key.exists() and force == False:
+    if key.exists() and not force:
         raise FileAlreadyExists("File at {} already exists!".format(url))
     key.set_contents_from_filename(path, cb=upload_callback())
 
