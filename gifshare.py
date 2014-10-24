@@ -203,11 +203,16 @@ def main(argv=sys.argv[1:]):
 
         subparsers = a_parser.add_subparsers()
 
-        upload_parser = subparsers.add_parser("upload")
+        upload_parser = subparsers.add_parser(
+            "upload",
+            help="Upload an image to your bucket."
+        )
         upload_parser.set_defaults(target=command_upload)
 
         upload_parser.add_argument(
-            '--force', '-f', action='store_true', default=False,
+            '--force', '-f',
+            action='store_true',
+            default=False,
             help='Overwrite any existing files if necessary.')
 
         upload_parser.add_argument(
@@ -219,8 +224,15 @@ def main(argv=sys.argv[1:]):
             nargs='?',
             help='A nice filename for the gif.')
 
-        list_parser = subparsers.add_parser("list")
-        list_parser.add_argument('-r', '--random', action='store_true')
+        list_parser = subparsers.add_parser(
+            "list",
+            help="List images stored in your bucket."
+        )
+        list_parser.add_argument(
+            '-r', '--random',
+            action='store_true',
+            help='Display a single random image URL.'
+        )
         list_parser.set_defaults(target=command_list)
 
         arguments = a_parser.parse_args(argv)
