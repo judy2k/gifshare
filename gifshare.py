@@ -74,13 +74,14 @@ def download_file(url):
     LOG.debug("Downloading image ...")
     response = requests.get(url, stream=True)
     length = int(response.headers['content-length'])
-    print 'Content length:', length
+    LOG.debug('Content length: %d', length)
     content = StringIO()
     i = 0
     widgets = ['Downloading image ', progressbar.Bar(), progressbar.Percentage()]
     pbar = progressbar.ProgressBar(widgets=widgets, maxval=length).start()
     for chunk in response.iter_content(64):
         i += len(chunk)
+        LOG.debug('Update: %d', i)
         content.write(chunk)
         pbar.update(i)
     pbar.finish()
