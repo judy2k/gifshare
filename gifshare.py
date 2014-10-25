@@ -109,35 +109,7 @@ def upload_callback():
     return callback
 
 
-def upload_url(config, url, name=None, force=False):
-    LOG.debug('Uploading URL ...')
-    data = download_file(url)
-    ext = correct_ext(data, True)
-    filename = (name or get_name_from_url(url)) + '.' + ext
-    dest_url = config.get('default', 'web_root') + filename
-    bucket = Bucket(config)
-    key = bucket.key_for(filename, CONTENT_TYPE_MAP[ext])
-    if key.exists() and not force:
-        raise FileAlreadyExists("File at {} already exists!".format(dest_url))
-    LOG.debug("Uploading image ...")
 
-    key.set_contents_from_string(data, cb=upload_callback())
-
-    return dest_url
-
-
-def upload_file(config, path, name=None, force=False):
-    LOG.debug("Uploading file ...")
-    ext = correct_ext(path)
-    filename = (name or splitext(basename(path))[0]) + '.' + ext
-    url = config.get('default', 'web_root') + filename
-    bucket = Bucket(config)
-    key = bucket.key_for(filename, CONTENT_TYPE_MAP[ext])
-    if key.exists() and not force:
-        raise FileAlreadyExists("File at {} already exists!".format(url))
-    key.set_contents_from_filename(path, cb=upload_callback())
-
-    return url
 
 
 class Bucket(object):
@@ -166,19 +138,47 @@ class Bucket(object):
             url = self._web_root + key.name
             yield url
 
+    def upload_url(self, url, name=None, force=False):
+        LOG.debug('Uploading URL ...')
+        data = download_file(url)
+        ext = correct_ext(data, True)
+        filename = (name or get_name_from_url(url)) + '.' + ext
+        dest_url = self._web_root + filename
+        key = self.key_for(filename, CONTENT_TYPE_MAP[ext])
+        if key.exists() and not force:
+            raise FileAlreadyExists(
+                "File at {} already exists!".format(dest_url))
+        LOG.debug("Uploading image ...")
+        key.set_contents_from_string(data, cb=upload_callback())
+
+        return dest_url
+
+    def upload_file(self, path, name=None, force=False):
+        LOG.debug("Uploading file ...")
+        ext = correct_ext(path)
+        filename = (name or splitext(basename(path))[0]) + '.' + ext
+        url = self._web_root + filename
+        key = self.key_for(filename, CONTENT_TYPE_MAP[ext])
+        if key.exists() and not force:
+            raise FileAlreadyExists("File at {} already exists!".format(url))
+        LOG.debug("Uploading image ...")
+        key.set_contents_from_filename(path, cb=upload_callback())
+
+        return url
+
 
 def command_upload(arguments, config):
     path = arguments.path
     if not URL_RE.match(path):
         if isfile(path):
-            print upload_file(
-                config, path, arguments.key, force=arguments.force)
+            print Bucket(config).upload_file(
+                path, arguments.key, force=arguments.force)
         else:
             raise IOError(
                 '{} does not exist or is not a file!'.format(path))
     else:
-        print upload_url(
-            config, path, arguments.key, force=arguments.force)
+        print Bucket(config).upload_url(
+            path, arguments.key, force=arguments.force)
 
 
 def command_list(arguments, config):
