@@ -8,7 +8,6 @@ import os.path
 from ConfigParser import ConfigParser
 
 import gifshare
-import progressbar
 
 defaults = {
     'aws_access_id': 'dummy-access-id',
@@ -17,6 +16,11 @@ defaults = {
     'region': 'dummy-region',
     'bucket': 'not.a.bucket',
 }
+
+
+class DummyKey(object):
+    def __init__(self, name):
+        self.name = name
 
 
 def dummy_get(_, key):
@@ -50,13 +54,38 @@ class TestBucket(unittest.TestCase):
             mock_get_bucket = MagicMock(name='get_bucket')
             MockS3Connection.return_value.get_bucket = mock_get_bucket
 
-            my_bucket = self.bucket.bucket
+            _ = self.bucket.bucket
 
             # Ensure the config is passed correctly to S3Connection
             # and get_bucket:
             MockS3Connection.assert_called_with(
                 'dummy-access-id', 'dummy-secret-access-key')
             mock_get_bucket.assert_called_with('not.a.bucket')
+
+    def test_list(self):
+        # Patch S3Connection and its get_bucket method:
+        with patch('gifshare.S3Connection',
+                   name='S3Connection') as MockS3Connection:
+            mock_get_bucket = MagicMock(name='get_bucket')
+            mock_bucket = MagicMock(name='bucket')
+            mock_get_bucket.return_value = mock_bucket
+            mock_bucket.list.return_value = [
+                DummyKey('image1.jpeg'),
+                DummyKey('image2.jpeg')
+            ]
+            MockS3Connection.return_value.get_bucket = mock_get_bucket
+
+            keys = list(self.bucket.list())
+
+            self.assertEqual(keys, [
+                'http://dummy.web.root/image1.jpeg',
+                'http://dummy.web.root/image2.jpeg',
+            ])
+
+            MockS3Connection.assert_called_with(
+                'dummy-access-id', 'dummy-secret-access-key')
+            mock_get_bucket.assert_called_with('not.a.bucket')
+            mock_bucket.list.assert_called_once_with()
 
 
 class TestExtensionDetection(unittest.TestCase):
@@ -105,9 +134,9 @@ class TestExtensionDetection(unittest.TestCase):
 class TestMiscellaneousFunctions(unittest.TestCase):
     @patch('gifshare.progressbar.ProgressBar')
     @patch('gifshare.requests')
-    def test_download_file(self, requests_mock, ProgressBar):
+    def test_download_file(self, requests_mock, progress_bar_stub):
         pbar_mock = MagicMock()
-        ProgressBar.return_value.start.return_value = pbar_mock
+        progress_bar_stub.return_value.start.return_value = pbar_mock
 
         response_stub = MagicMock()
         response_stub.headers = {
