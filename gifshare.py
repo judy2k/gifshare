@@ -109,6 +109,7 @@ def upload_callback():
 
 
 def upload_url(config, url, name=None, force=False):
+    LOG.debug('Uploading URL ...')
     data = download_file(url)
     ext = correct_ext(data, True)
     filename = (name or get_name_from_url(url)) + '.' + ext
