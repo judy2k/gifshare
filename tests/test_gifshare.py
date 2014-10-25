@@ -242,6 +242,71 @@ class TestMain(unittest.TestCase):
         self.assertEqual(cmd_upload.call_count, 1)
 
     @patch('gifshare.command_list')
-    def test_main_upload(self, cmd_list):
+    def test_main_list(self, cmd_list):
         gifshare.main(['list'])
         self.assertEqual(cmd_list.call_count, 1)
+
+    @patch('gifshare.command_list')
+    def test_main_error(self, cmd_list):
+        cmd_list.side_effect = gifshare.UserException
+        result = gifshare.main(['list'])
+        self.assertEqual(result, 1)
+
+    @patch('gifshare.load_config', return_value=config_stub)
+    @patch('gifshare.Bucket')
+    def test_main_list_arguments(self, bucket_mock, load_config_stub):
+        bucket_instance = MagicMock()
+        bucket_mock.return_value = bucket_instance
+        bucket_instance.list.return_value = [
+            'http://dummy.web.root/image1.jpeg',
+            'http://dummy.web.root/image2.jpeg',
+        ]
+
+        gifshare.main(['list'])
+        self.assertEqual(bucket_mock.call_args, call(config_stub))
+        self.assertEqual(bucket_instance.list.call_count, 1)
+
+    @patch('random.choice')
+    @patch('gifshare.load_config', return_value=config_stub)
+    @patch('gifshare.Bucket')
+    def test_main_list_random(self, bucket_mock, load_config_stub, random_choice):
+        bucket_instance = MagicMock()
+        bucket_mock.return_value = bucket_instance
+        bucket_instance.list.return_value = [
+            'http://dummy.web.root/image1.jpeg',
+            'http://dummy.web.root/image2.jpeg',
+        ]
+
+        gifshare.main(['list', '-r'])
+        bucket_init = bucket_mock.call_args
+        self.assertEqual(bucket_init, call(config_stub))
+        self.assertEqual(bucket_instance.list.call_count, 1)
+
+        self.assertEqual(random_choice.call_count, 1)
+
+    @patch('gifshare.load_config', return_value=config_stub)
+    @patch('gifshare.Bucket')
+    def test_main_upload_url(self, bucket_mock, load_config_stub):
+        bucket_instance = MagicMock()
+        bucket_mock.return_value = bucket_instance
+
+        gifshare.main(['upload', 'http://probably.giphy/kittiez.png'])
+        self.assertEqual(bucket_mock.call_args, call(config_stub))
+        self.assertEqual(bucket_instance.upload_url.call_count, 1)
+
+    @patch('gifshare.load_config', return_value=config_stub)
+    @patch('gifshare.Bucket')
+    def test_main_upload_file(self, bucket_mock, load_config_stub):
+        bucket_instance = MagicMock()
+        bucket_mock.return_value = bucket_instance
+
+        gifshare.main(['upload', _image_path('png')])
+        self.assertEqual(bucket_mock.call_args, call(config_stub))
+        self.assertEqual(bucket_instance.upload_file.call_count, 1)
+
+    @patch('gifshare.load_config', return_value=config_stub)
+    @patch('gifshare.Bucket')
+    def test_main_upload_missing_file(self, bucket_mock, load_config_stub):
+        with self.assertRaises(IOError):
+            gifshare.main(['upload', '/tmp/non-existent.png'])
+            self.assertEqual(bucket_mock.call_count, 0)
