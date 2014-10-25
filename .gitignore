@@ -1,5 +1,6 @@
 *.egg-info
 *.pyc
+.coverage
 .dev_activate
 .gifshare
 .idea
@@ -7,6 +8,7 @@
 README.html
 TODO.html
 build
+coverage-report
 dist
 env
 venv
