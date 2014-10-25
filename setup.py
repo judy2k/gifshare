@@ -25,6 +25,6 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python',
     ],
-    install_requires=open('requirements.txt').readlines(),
+    install_requires=open('requirements/_base.txt').readlines(),
     zip_safe=False,
 )

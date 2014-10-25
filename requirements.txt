@@ -1,4 +1,1 @@
-boto>=2.24.0
-requests>=2.2.1
-python-magic>=0.4.6
-progressbar>=2.3
+-r requirements/_base.txt
