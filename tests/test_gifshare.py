@@ -2,12 +2,13 @@
 
 import unittest
 from nose.tools import assert_raises
-from mock import MagicMock, patch
+from mock import MagicMock, patch, call
 
 import os.path
 from ConfigParser import ConfigParser
 
 import gifshare
+import progressbar
 
 defaults = {
     'aws_access_id': 'dummy-access-id',
@@ -44,18 +45,18 @@ class TestBucket(unittest.TestCase):
 
     def test_bucket(self):
         # Patch S3Connection and its get_bucket method:
-        with patch(
-                'gifshare.S3Connection', name='S3Connection') as S3Connection:
-            get_bucket = MagicMock(name='get_bucket')
-            S3Connection.return_value.get_bucket = get_bucket
+        with patch('gifshare.S3Connection',
+                   name='S3Connection') as MockS3Connection:
+            mock_get_bucket = MagicMock(name='get_bucket')
+            MockS3Connection.return_value.get_bucket = mock_get_bucket
 
             my_bucket = self.bucket.bucket
 
             # Ensure the config is passed correctly to S3Connection
             # and get_bucket:
-            S3Connection.assert_called_with(
+            MockS3Connection.assert_called_with(
                 'dummy-access-id', 'dummy-secret-access-key')
-            get_bucket.assert_called_with('not.a.bucket')
+            mock_get_bucket.assert_called_with('not.a.bucket')
 
 
 class TestExtensionDetection(unittest.TestCase):
@@ -101,8 +102,39 @@ class TestExtensionDetection(unittest.TestCase):
             gifshare.correct_ext(self._load_image('ico'), True)
 
 
-class TestDownload(unittest.TestCase):
-    def test_download_file(self):
-        with patch('gifshare.requests') as requests_stub:
-            gifshare.download_file('http://nonsense.url/')
-            requests_stub.get.assert_called_with('http://nonsense.url/', stream=True)
+class TestMiscellaneousFunctions(unittest.TestCase):
+    @patch('gifshare.progressbar.ProgressBar')
+    @patch('gifshare.requests')
+    def test_download_file(self, requests_mock, ProgressBar):
+        pbar_mock = MagicMock()
+        ProgressBar.return_value.start.return_value = pbar_mock
+
+        response_stub = MagicMock()
+        response_stub.headers = {
+            'content-length': 197
+        }
+
+        def iter_content_stub(_):
+            for i in range(3):
+                yield ' ' * 64
+            yield ' ' * 5
+        response_stub.iter_content = iter_content_stub
+        requests_mock.get.return_value = response_stub
+        gifshare.download_file('http://nonsense.url/')
+        requests_mock.get.assert_called_with(
+            'http://nonsense.url/', stream=True)
+        pbar_mock.update.assert_has_calls([
+            call(64), call(128), call(192), call(197)
+        ])
+        pbar_mock.finish.assert_called_once_with()
+
+    def test_get_name_from_url(self):
+        self.assertEqual(
+            gifshare.get_name_from_url('http://some.domain/path/myfile.jpeg'),
+            'myfile'
+        )
+
+        self.assertEqual(
+            gifshare.get_name_from_url('http://some.domain/path/myfile.jpeg#.png'),
+            'myfile'
+        )
