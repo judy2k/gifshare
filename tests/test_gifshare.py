@@ -2,12 +2,18 @@
 
 import unittest
 from nose.tools import assert_raises
-from mock import MagicMock, patch, call
+from mock import MagicMock, patch, call, ANY
 
 import os.path
 from ConfigParser import ConfigParser
 
 import gifshare
+
+
+def _image_path(ext):
+        here = os.path.dirname(__file__)
+        return os.path.join(here, 'fixtures', 'test_image.{}'.format(ext))
+
 
 defaults = {
     'aws_access_id': 'dummy-access-id',
@@ -31,21 +37,11 @@ config_stub = MagicMock(spec=ConfigParser)
 config_stub.get.side_effect = dummy_get
 
 
-class TestGifshare(unittest.TestCase):
-    def setUp(self):
-        pass
-
-    def test_upload(self):
-        pass
-
-    def test_upload_missing_file(self):
-        with assert_raises(IOError):
-            gifshare.upload_file(config_stub, '/tmp/non-existent')
-
-
 class TestBucket(unittest.TestCase):
     def setUp(self):
         self.bucket = gifshare.Bucket(config_stub)
+
+
 
     def test_bucket(self):
         # Patch S3Connection and its get_bucket method:
@@ -86,6 +82,27 @@ class TestBucket(unittest.TestCase):
                 'dummy-access-id', 'dummy-secret-access-key')
             mock_get_bucket.assert_called_with('not.a.bucket')
             mock_bucket.list.assert_called_once_with()
+
+    @patch('gifshare.S3Connection', name='S3Connection')
+    def test_upload_file(self, s3_connection_stub):
+        key_stub = MagicMock(name='Key')
+        key_stub.exists.return_value = False
+
+        s3_con_instance = s3_connection_stub.return_value
+        key_for_stub = MagicMock()
+        key_for_stub.return_value = key_stub
+        self.bucket.key_for = key_for_stub
+
+        self.bucket.upload_file(_image_path('png'))
+        key_stub.set_contents_from_filename.assert_called_once_with(
+            os.path.abspath(_image_path('png')),
+            cb=ANY
+        )
+
+    @patch('gifshare.S3Connection', name='S3Connection')
+    def test_upload_missing_file(self, s3_connection_stub):
+        with assert_raises(IOError):
+            self.bucket.upload_file('/tmp/non-existent')
 
 
 class TestExtensionDetection(unittest.TestCase):
