@@ -5,20 +5,15 @@
 gifshare - Share Gifs via Amazon S3
 """
 
-FOOTER = """
-Copyright (c) 2014 by Mark Smith.
-MIT Licensed, see LICENSE.txt for more details.
-"""
-
-__version__ = '0.0.1'
+from __future__ import print_function, absolute_import, unicode_literals
 
 import argparse
-from ConfigParser import SafeConfigParser
+from six.moves.configparser import SafeConfigParser
 import logging
 from os.path import expanduser, isfile, basename, splitext
 import random
 import re
-from StringIO import StringIO
+from six import StringIO
 import sys
 
 from boto.s3.key import Key
@@ -27,6 +22,14 @@ from boto.s3.connection import S3Connection
 import magic
 import progressbar
 import requests
+
+
+FOOTER = """
+Copyright (c) 2014 by Mark Smith.
+MIT Licensed, see LICENSE.txt for more details.
+"""
+
+__version__ = '0.0.3'
 
 
 class UserException(Exception):
@@ -57,7 +60,7 @@ LOG = logging.getLogger('gifshare')
 def correct_ext(data, is_buffer=False):
     magic_output = magic.from_buffer(data) if is_buffer else magic.from_file(
         data)
-    match = re.search(r'JPEG|GIF|PNG', magic_output)
+    match = re.search(r'JPEG|GIF|PNG', magic_output.decode('utf-8'))
     if match:
         return match.group(0).lower()
     else:
@@ -107,9 +110,6 @@ def upload_callback():
             pbar[0].finish()
 
     return callback
-
-
-
 
 
 class Bucket(object):
@@ -171,23 +171,23 @@ def command_upload(arguments, config):
     path = arguments.path
     if not URL_RE.match(path):
         if isfile(path):
-            print Bucket(config).upload_file(
-                path, arguments.key, force=arguments.force)
+            print(Bucket(config).upload_file(
+                path, arguments.key, force=arguments.force))
         else:
             raise IOError(
                 '{} does not exist or is not a file!'.format(path))
     else:
-        print Bucket(config).upload_url(
-            path, arguments.key, force=arguments.force)
+        print(Bucket(config).upload_url(
+            path, arguments.key, force=arguments.force))
 
 
 def command_list(arguments, config):
     bucket = Bucket(config)
     if not arguments.random:
         for item in bucket.list():
-            print item
+            print(item)
     else:
-        print random.choice(list(bucket.list()))
+        print(random.choice(list(bucket.list())))
 
 
 def main(argv=sys.argv[1:]):
@@ -246,7 +246,7 @@ def main(argv=sys.argv[1:]):
 
         arguments.target(arguments, config)
     except UserException as ue:
-        print >> sys.stderr, ue
+        print(ue, file=sys.stderr)
         return 1
 
 

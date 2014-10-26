@@ -5,7 +5,7 @@ from nose.tools import assert_raises
 from mock import MagicMock, patch, call, ANY
 
 import os.path
-from ConfigParser import ConfigParser
+from six.moves.configparser import ConfigParser
 
 import gifshare
 
