@@ -1,6 +1,7 @@
 *.egg-info
 *.pyc
 .coverage
+.coveralls.yml
 .dev_activate
 .gifshare
 .idea
