@@ -1,6 +1,8 @@
 GifShare
 ========
 
+[![Build Status](https://travis-ci.org/judy2k/gifshare.svg?branch=master)](https://travis-ci.org/judy2k/gifshare)
+
 A command-line tool to upload images to S3, for sharing over IRC or whatever.
 Supports copying the image from the Web to your S3 bucket, and file renaming.
 
