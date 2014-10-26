@@ -3,6 +3,7 @@ GifShare
 
 [![Build Status](https://travis-ci.org/judy2k/gifshare.svg?branch=master)](https://travis-ci.org/judy2k/gifshare)
 [![Coverage Status](https://img.shields.io/coveralls/judy2k/gifshare.svg)](https://coveralls.io/r/judy2k/gifshare?branch=master)
+[![Code Health](https://landscape.io/github/judy2k/gifshare/master/landscape.png)](https://landscape.io/github/judy2k/gifshare/master)
 
 A command-line tool to upload images to S3, for sharing over IRC or whatever.
 Supports copying the image from the Web to your S3 bucket, and file renaming.
