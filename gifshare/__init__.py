@@ -8,7 +8,7 @@ gifshare - Share Gifs via Amazon S3
 from __future__ import print_function, absolute_import, unicode_literals
 
 import argparse
-from six.moves.configparser import SafeConfigParser
+from six.moves import configparser
 import logging
 from os.path import expanduser, isfile, basename, splitext
 import random
@@ -68,7 +68,7 @@ def correct_ext(data, is_buffer=False):
 
 
 def load_config():
-    config = SafeConfigParser()
+    config = configparser.SafeConfigParser()
     config.read([expanduser('~/.gifshare'), '.gifshare'])
     return config
 
