@@ -17,7 +17,7 @@ setup(
             'gifshare = gifshare:main',
         ]
     },
-    py_modules=['gifshare'],
+    packages=['gifshare'],
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',
