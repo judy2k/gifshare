@@ -50,9 +50,9 @@ class FileAlreadyExists(UserException):
 
 URL_RE = re.compile(r'^http.*')
 CONTENT_TYPE_MAP = {
-    'gif': 'image/gif',
-    'jpeg': 'image/jpeg',
-    'png': 'image/png',
+    u'gif': u'image/gif',
+    u'jpeg': u'image/jpeg',
+    u'png': u'image/png',
 }
 LOG = logging.getLogger('gifshare')
 
@@ -80,7 +80,8 @@ def download_file(url):
     LOG.debug('Content length: %d', length)
     content = StringIO()
     i = 0
-    widgets = ['Downloading image ', progressbar.Bar(), progressbar.Percentage()]
+    widgets = [
+        'Downloading image ', progressbar.Bar(), progressbar.Percentage()]
     pbar = progressbar.ProgressBar(widgets=widgets, maxval=length).start()
     for chunk in response.iter_content(64):
         i += len(chunk)
@@ -138,13 +139,20 @@ class Bucket(object):
             url = self._web_root + key.name
             yield url
 
-    def upload_url(self, url, name=None, force=False):
-        LOG.debug('Uploading URL ...')
-        data = download_file(url)
-        ext = correct_ext(data, True)
-        filename = (name or get_name_from_url(url)) + '.' + ext
+    def upload_file(self, filename, content_type, path, force=False):
+        url = self._web_root + filename
+
+        key = self.key_for(filename, content_type)
+        if key.exists() and not force:
+            raise FileAlreadyExists("File at {} already exists!".format(url))
+        LOG.debug("Uploading image ...")
+        key.set_contents_from_filename(path, cb=upload_callback())
+
+        return url
+
+    def upload_contents(self, filename, content_type, data, force=False):
         dest_url = self._web_root + filename
-        key = self.key_for(filename, CONTENT_TYPE_MAP[ext])
+        key = self.key_for(filename, content_type)
         if key.exists() and not force:
             raise FileAlreadyExists(
                 "File at {} already exists!".format(dest_url))
@@ -153,31 +161,40 @@ class Bucket(object):
 
         return dest_url
 
+
+class GifShare(object):
+    def __init__(self, bucket):
+        self._bucket = bucket
+
+    def upload_url(self, url, name=None, force=False):
+        LOG.debug('Uploading URL ...')
+        data = download_file(url)
+        ext = correct_ext(data, True)
+        content_type = CONTENT_TYPE_MAP[ext]
+        filename = (name or get_name_from_url(url)) + '.' + ext
+
+        return self._bucket.upload_contents(
+            filename, content_type, data, force)
+
     def upload_file(self, path, name=None, force=False):
         LOG.debug("Uploading file ...")
         ext = correct_ext(path)
         filename = (name or splitext(basename(path))[0]) + '.' + ext
-        url = self._web_root + filename
-        key = self.key_for(filename, CONTENT_TYPE_MAP[ext])
-        if key.exists() and not force:
-            raise FileAlreadyExists("File at {} already exists!".format(url))
-        LOG.debug("Uploading image ...")
-        key.set_contents_from_filename(path, cb=upload_callback())
-
-        return url
+        content_type = CONTENT_TYPE_MAP[ext]
+        return self._bucket.upload_file(filename, content_type, path, force)
 
 
 def command_upload(arguments, config):
     path = arguments.path
     if not URL_RE.match(path):
         if isfile(path):
-            print(Bucket(config).upload_file(
+            print(GifShare(Bucket(config)).upload_file(
                 path, arguments.key, force=arguments.force))
         else:
             raise IOError(
                 '{} does not exist or is not a file!'.format(path))
     else:
-        print(Bucket(config).upload_url(
+        print(GifShare(Bucket(config)).upload_url(
             path, arguments.key, force=arguments.force))
 
 
@@ -245,8 +262,8 @@ def main(argv=sys.argv[1:]):
             level=logging.DEBUG if arguments.verbose else logging.WARN)
 
         arguments.target(arguments, config)
-    except UserException as ue:
-        print(ue, file=sys.stderr)
+    except UserException as user_exception:
+        print(user_exception, file=sys.stderr)
         return 1
 
 
