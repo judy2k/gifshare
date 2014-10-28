@@ -1,5 +1,6 @@
 GifShare
 ========
+[![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/judy2k/gifshare?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 [![Build Status](https://travis-ci.org/judy2k/gifshare.svg?branch=master)](https://travis-ci.org/judy2k/gifshare)
 [![Coverage Status](https://img.shields.io/coveralls/judy2k/gifshare.svg)](https://coveralls.io/r/judy2k/gifshare?branch=master)
