@@ -128,7 +128,7 @@ class Bucket(object):
             self._bucket = conn.get_bucket(self._bucket_name)
         return self._bucket
 
-    def key_for(self, filename, content_type):
+    def key_for(self, filename, content_type=None):
         k = Key(self.bucket, filename)
         k.content_type = content_type
         return k
@@ -161,13 +161,21 @@ class Bucket(object):
 
         return dest_url
 
+    def delete_file(self, remote_path):
+        key = self.key_for(remote_path)
+        if key.exists():
+            key.delete()
+        else:
+            print("The image '%s' does not exist" % remote_path,
+                  file=sys.stderr)
+
 
 class GifShare(object):
     def __init__(self, bucket):
         self._bucket = bucket
 
     def upload_url(self, url, name=None, force=False):
-        LOG.debug('Uploading URL ...')
+        LOG.debug("Uploading URL '%s'", url)
         data = download_file(url)
         ext = correct_ext(data, True)
         content_type = CONTENT_TYPE_MAP[ext]
@@ -177,11 +185,14 @@ class GifShare(object):
             filename, content_type, data, force)
 
     def upload_file(self, path, name=None, force=False):
-        LOG.debug("Uploading file ...")
+        LOG.debug("Uploading file '%s'", path)
         ext = correct_ext(path)
         filename = (name or splitext(basename(path))[0]) + '.' + ext
         content_type = CONTENT_TYPE_MAP[ext]
         return self._bucket.upload_file(filename, content_type, path, force)
+
+    def delete_file(self, remote_path):
+        self._bucket.delete_file(remote_path)
 
 
 def command_upload(arguments, config):
@@ -205,6 +216,11 @@ def command_list(arguments, config):
             print(item)
     else:
         print(random.choice(list(bucket.list())))
+
+
+def command_delete(arguments, config):
+    bucket = Bucket(config)
+    bucket.delete_file(arguments.path)
 
 
 def main(argv=sys.argv[1:]):
@@ -254,6 +270,16 @@ def main(argv=sys.argv[1:]):
         )
         list_parser.set_defaults(target=command_list)
 
+        delete_parser = subparsers.add_parser(
+            "delete",
+            help="Delete a file in your bucket."
+        )
+        delete_parser.add_argument(
+            "path",
+            help="The path to a file to delete"
+        )
+        delete_parser.set_defaults(target=command_delete)
+
         arguments = a_parser.parse_args(argv)
         config = load_config()
 
@@ -262,6 +288,7 @@ def main(argv=sys.argv[1:]):
             level=logging.DEBUG if arguments.verbose else logging.WARN)
 
         arguments.target(arguments, config)
+        return 0
     except UserException as user_exception:
         print(user_exception, file=sys.stderr)
         return 1
