@@ -4,11 +4,11 @@ test:
 		--cover-erase --cover-tests
 
 clean:
-	rm -rf *.egg-info build dist \
+	rm -rf *.egg-info build \
 	   	*.pyc gifshare/*.pyc gifshare/__pycache__ \
 	   	README.html TODO.html 
 
 distclean: clean
-	rm -rf coverage-report
+	rm -rf coverage-report dist
 
 .PHONY: test clean distclean
