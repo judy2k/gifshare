@@ -21,7 +21,7 @@ setup(
     long_description=__doc__,
     author='Mark Smith',
     author_email='mark.smith@practicalpoetry.co.uk',
-    url='https://github.com/judy2k/tzgeo',
+    url='https://github.com/judy2k/gifshare',
     license='MIT License',
     entry_points={
         'console_scripts': [
