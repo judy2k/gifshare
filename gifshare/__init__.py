@@ -292,7 +292,3 @@ def main(argv=sys.argv[1:]):
     except UserException as user_exception:
         print(user_exception, file=sys.stderr)
         return 1
-
-
-if __name__ == '__main__':
-    sys.exit(main())
