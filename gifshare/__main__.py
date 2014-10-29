@@ -1,4 +1,6 @@
 """
+gifshare - A command-line tool to upload images to S3.
+
 Allow gifshare to be run as a package with `python -m gifshare <arguments>`
 """
 

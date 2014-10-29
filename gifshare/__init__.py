@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-gifshare - Share Gifs via Amazon S3
+gifshare - A command-line tool to upload images to S3.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals
@@ -29,7 +29,7 @@ Copyright (c) 2014 by Mark Smith.
 MIT Licensed, see LICENSE.txt for more details.
 """
 
-__version__ = '0.0.3'
+__version__ = '0.0.4'
 
 
 class UserException(Exception):

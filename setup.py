@@ -1,6 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+gifshare - A command-line tool to upload images to S3.
+
+Run with `python setup.py install` to install gifshare into your default
+Python environment.
+"""
+
 from setuptools import setup
 
 import os.path
@@ -9,7 +16,7 @@ HERE = os.path.dirname(__file__)
 
 setup(
     name="gifshare",
-    version="0.0.3",
+    version="0.0.4",
     description="Store images in S3",
     long_description=__doc__,
     author='Mark Smith',
