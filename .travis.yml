@@ -1,8 +1,16 @@
 language: python
-install: "pip install tox"
+install: pip install tox
 script: tox
 env:
-    - TOXENV=py27
-    - TOXENV=py33
-    - TOXENV=py34
-    - TOXENV=coverage
+- TOXENV=py27
+- TOXENV=py33
+- TOXENV=py34
+- TOXENV=coverage
+deploy:
+  provider: pypi
+  user: bedmondmark
+  password:
+    secure: IlQo4tJhiAcabOCnXC5kdHFMmkdCdpvOtxoYthA7BmNvuoQRKZVF2RZlqaTaXgt+dGySYPzhjaja2bITMymqHZOlyOv8pXAmPu+JPNsbJJra8L1DdsO4tPWnxZPrMOjhV2qWXZciAmeWQ751WQznXbCFkw3BIykaySMmY3WghLU=
+  on:
+    tags: true
+    repo: judy2k/gifshare
