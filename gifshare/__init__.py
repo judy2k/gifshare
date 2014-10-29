@@ -41,10 +41,18 @@ class UserException(Exception):
 
 
 class UnknownFileType(UserException):
+    """
+    A UserException that indicates that a file to be uploaded wasn't a PNG, GIF
+    or JPEG file.
+    """
     pass
 
 
 class FileAlreadyExists(UserException):
+    """
+    A UserException that indicates that if a file was uploaded it would
+    overwrite a file already in the store.
+    """
     pass
 
 
@@ -58,6 +66,13 @@ LOG = logging.getLogger('gifshare')
 
 
 def correct_ext(data, is_buffer=False):
+    """
+    Inspect the contents of an image (data), and determine what image type it
+    conforms to. Return the correct file extension for this image-type.
+
+    Raises an UnknownFileType exception if data is not PNG, GIF or JPEG
+    image data.
+    """
     magic_output = magic.from_buffer(data) if is_buffer else magic.from_file(
         data)
     match = re.search(r'JPEG|GIF|PNG', magic_output.decode('utf-8'))
@@ -68,12 +83,22 @@ def correct_ext(data, is_buffer=False):
 
 
 def load_config():
+    """
+    Load configuration from the following locations in order:
+
+    * .gifshare in the user's home directory
+    * .gifshare in the current directory
+    """
     config = configparser.SafeConfigParser()
     config.read([expanduser('~/.gifshare'), '.gifshare'])
     return config
 
 
 def download_file(url):
+    """
+    Download an image from the provided `url` and return the file contents as
+    a `str`.
+    """
     LOG.debug("Downloading image ...")
     response = requests.get(url, stream=True)
     length = int(response.headers['content-length'])
@@ -94,14 +119,28 @@ def download_file(url):
 
 
 def get_name_from_url(url):
+    """
+    Extract the filename from the end of a url.
+    """
     return re.match(r'.*/([^/\.]+)', url).group(1)
 
 
 def upload_callback():
+    """
+    Return a callback function that can be called repeatedly with a current
+    value and total value to update a progress bar on the screen.
+
+    The progress-bar is initialised on the first call, and disposed of when
+    called with update == total.
+    """
     pbar = [None]
     widgets = ['Uploading image ', progressbar.Bar(), progressbar.Percentage()]
 
     def callback(update, total):
+        """
+        A callback for displaying, updating, and disposing of a terminal
+        progress bar.
+        """
         if pbar[0] is None:
             pbar[0] = progressbar.ProgressBar(widgets=widgets, maxval=total)
             pbar[0].start()
@@ -114,6 +153,18 @@ def upload_callback():
 
 
 class Bucket(object):
+    """
+    Encapsulation of various operations on an S3 bucket.
+
+    Should be initialised with a ConfigParser instance containing the
+    following items:
+
+    * aws_access_id
+    * aws_secret_access_key
+    * bucket
+    * web_root
+    """
+
     def __init__(self, config):
         self._bucket = None
         self._key_id = config.get('default', 'aws_access_id')
@@ -123,23 +174,43 @@ class Bucket(object):
 
     @property
     def bucket(self):
+        """
+        A boto Bucket instance.
+        """
+
         if not self._bucket:
             conn = S3Connection(self._key_id, self._access_key)
             self._bucket = conn.get_bucket(self._bucket_name)
         return self._bucket
 
     def key_for(self, filename, content_type=None):
+        """
+        Obtain a key in the configured bucket for the provided `filename`.
+
+        If the key will be uploaded-to, the `content_type` param should
+        be provided.
+        """
         k = Key(self.bucket, filename)
         k.content_type = content_type
         return k
 
     def list(self):
+        """
+        Return an iterator over the image URLs stored in this bucket.
+        """
         bucket = self.bucket
         for key in bucket.list():
             url = self._web_root + key.name
             yield url
 
     def upload_file(self, filename, content_type, path, force=False):
+        """
+        Upload a file from the filesystem to the S3 bucket.
+
+        `filename` is a path to the local file. The uploaded file will be
+        stored at `path`, with the provided `content-type`. If `force` is
+        `True`, any existing image at the specified path will be overwritten.
+        """
         url = self._web_root + filename
 
         key = self.key_for(filename, content_type)
@@ -151,6 +222,16 @@ class Bucket(object):
         return url
 
     def upload_contents(self, filename, content_type, data, force=False):
+        """
+        Upload image data to the S3 bucket.
+
+        `filename` contains path under the S3 bucket. `content-type` is the
+        content type stored against the image file. `data` contains the
+        binary image data.
+
+        If `force` is `True`, any existing image at the specified path will be
+        overwritten.
+        """
         dest_url = self._web_root + filename
         key = self.key_for(filename, content_type)
         if key.exists() and not force:
@@ -162,6 +243,9 @@ class Bucket(object):
         return dest_url
 
     def delete_file(self, remote_path):
+        """
+        Delete an S3 file at the specified `remote_path`.
+        """
         key = self.key_for(remote_path)
         if key.exists():
             key.delete()
@@ -171,10 +255,22 @@ class Bucket(object):
 
 
 class GifShare(object):
+    """
+    High level application functionality.
+    """
+
     def __init__(self, bucket):
         self._bucket = bucket
 
     def upload_url(self, url, name=None, force=False):
+        """
+        Download the image at `url` and then upload the image data. The name
+        is devised from the original URL. This can be overridden by providing
+        `name`.
+
+        If `force` is `True`, any existing image at the specified path will be
+        overwritten.
+        """
         LOG.debug("Uploading URL '%s'", url)
         data = download_file(url)
         ext = correct_ext(data, True)
@@ -185,6 +281,15 @@ class GifShare(object):
             filename, content_type, data, force)
 
     def upload_file(self, path, name=None, force=False):
+        """
+        Upload a file from the filesystem.
+
+        `path` is a path to the local file. The name is devised from the
+        original file name. This can be overridden by providing `name`.
+
+        If `force` is `True`, any existing image at the specified path will be
+        overwritten.
+        """
         LOG.debug("Uploading file '%s'", path)
         ext = correct_ext(path)
         filename = (name or splitext(basename(path))[0]) + '.' + ext
@@ -192,10 +297,16 @@ class GifShare(object):
         return self._bucket.upload_file(filename, content_type, path, force)
 
     def delete_file(self, remote_path):
+        """
+        Delete a remote file currently stored at `remote_path`.
+        """
         self._bucket.delete_file(remote_path)
 
 
 def command_upload(arguments, config):
+    """
+    Extract the provided argparse arguments and upload a file or URL.
+    """
     path = arguments.path
     if not URL_RE.match(path):
         if isfile(path):
@@ -210,6 +321,9 @@ def command_upload(arguments, config):
 
 
 def command_list(arguments, config):
+    """
+    Extract the provided argparse arguments and list the files stored remotely.
+    """
     bucket = Bucket(config)
     if not arguments.random:
         for item in bucket.list():
@@ -219,11 +333,20 @@ def command_list(arguments, config):
 
 
 def command_delete(arguments, config):
+    """
+    Extract the provided argparse arguments and delete a remote file.
+    """
     bucket = Bucket(config)
     bucket.delete_file(arguments.path)
 
 
 def main(argv=sys.argv[1:]):
+    """
+    The entry-point for command-line execution.
+
+    This function parses the command-line argument and then passes this and the
+    loaded configuration off to a sub-command's `command_` function.
+    """
     try:
         a_parser = argparse.ArgumentParser(description=__doc__, epilog=FOOTER)
         a_parser.add_argument(
