@@ -1,2 +1,6 @@
 include requirements.txt
 recursive-include requirements *.txt
+include README.md
+include LICENSE.txt
+include TODO.md
+include tests
