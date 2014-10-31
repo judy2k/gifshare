@@ -1,10 +1,10 @@
 GifShare
 ========
-[![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/judy2k/gifshare?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 [![Build Status](https://travis-ci.org/judy2k/gifshare.svg?branch=master)](https://travis-ci.org/judy2k/gifshare)
 [![Coverage Status](https://img.shields.io/coveralls/judy2k/gifshare.svg)](https://coveralls.io/r/judy2k/gifshare?branch=master)
 [![Code Health](https://landscape.io/github/judy2k/gifshare/master/landscape.png)](https://landscape.io/github/judy2k/gifshare/master)
+[![Gitter](http://img.shields.io/badge/chat-%23judy2k%2fgifshare-brightgreen.svg)](https://gitter.im/judy2k/gifshare?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 A command-line tool to upload images to S3, for sharing over IRC or whatever.
 Supports copying the image from the Web to your S3 bucket, and file renaming.
