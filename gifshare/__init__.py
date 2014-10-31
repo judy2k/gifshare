@@ -261,6 +261,9 @@ class Bucket(object):
                   file=sys.stderr)
 
     def get_url(self, name):
+        """
+        Generate a URL for `name` stored in the bucket.
+        """
         key = self.key_for(name)
         if key.exists():
             return self._web_root + name
@@ -317,6 +320,9 @@ class GifShare(object):
         self._bucket.delete_file(remote_path)
 
     def get_url(self, name):
+        """
+        Obtain a URL for name stored in the bucket.
+        """
         return self._bucket.get_url(name)
 
 
