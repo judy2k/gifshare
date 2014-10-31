@@ -3,9 +3,6 @@
 
 """
 gifshare - A command-line tool to upload images to S3.
-
-Run with `python setup.py install` to install gifshare into your default
-Python environment.
 """
 
 from setuptools import setup
