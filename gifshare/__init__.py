@@ -56,6 +56,13 @@ class FileAlreadyExists(UserException):
     pass
 
 
+class MissingFile(UserException):
+    """
+    A UserException that indicates a requested file was missing from
+    the server.
+    """
+
+
 URL_RE = re.compile(r'^http.*')
 CONTENT_TYPE_MAP = {
     u'gif': u'image/gif',
@@ -253,6 +260,13 @@ class Bucket(object):
             print("The image '%s' does not exist" % remote_path,
                   file=sys.stderr)
 
+    def get_url(self, name):
+        key = self.key_for(name)
+        if key.exists():
+            return self._web_root + name
+        else:
+            raise MissingFile("The image '%s' does not exist" % name)
+
 
 class GifShare(object):
     """
@@ -302,6 +316,9 @@ class GifShare(object):
         """
         self._bucket.delete_file(remote_path)
 
+    def get_url(self, name):
+        return self._bucket.get_url(name)
+
 
 def command_upload(arguments, config):
     """
@@ -338,6 +355,14 @@ def command_delete(arguments, config):
     """
     bucket = Bucket(config)
     bucket.delete_file(arguments.path)
+
+
+def command_expand(arguments, config):
+    """
+    Extract the provided argparse arguments and expand the name to a URL.
+    """
+    bucket = Bucket(config)
+    print(bucket.get_url(arguments.path))
 
 
 def main(argv=sys.argv[1:]):
@@ -402,6 +427,16 @@ def main(argv=sys.argv[1:]):
             help="The path to a file to delete"
         )
         delete_parser.set_defaults(target=command_delete)
+
+        expand_parser = subparsers.add_parser(
+            "expand",
+            help="Convert a filename to a URL"
+        )
+        expand_parser.add_argument(
+            'path',
+            help="The name of the uploaded file."
+        )
+        expand_parser.set_defaults(target=command_expand)
 
         arguments = a_parser.parse_args(argv)
         config = load_config()
