@@ -7,7 +7,9 @@
 [![Gitter](http://img.shields.io/badge/chat-%23judy2k%2fgifshare-brightgreen.svg)](https://gitter.im/judy2k/gifshare?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 A command-line tool to upload images to S3, for sharing over IRC or whatever.
-Supports copying the image from the Web to your S3 bucket, and file renaming.
+Gifshare can copy an image directly from the Web to your S3 bucket. It will
+auto-detect the image type and rename it if necessary. Once the image is in
+your S3 bucket, it supports listing and deletion (more functions coming soon!)
 
 ![Don't try this at home, kids](http://gifs.ninjarockstar.guru/kitty-throw.gif)
 
