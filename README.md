@@ -1,5 +1,5 @@
-GifShare
-========
+# GifShare
+
 
 [![Build Status](https://travis-ci.org/judy2k/gifshare.svg?branch=master)](https://travis-ci.org/judy2k/gifshare)
 [![Coverage Status](https://img.shields.io/coveralls/judy2k/gifshare.svg)](https://coveralls.io/r/judy2k/gifshare?branch=master)
@@ -12,8 +12,7 @@ Supports copying the image from the Web to your S3 bucket, and file renaming.
 ![Don't try this at home, kids](http://gifs.ninjarockstar.guru/kitty-throw.gif)
 
 
-Requirements
-------------
+## Requirements
 
 * Python 2.7 (it might run on earlier versions)
 * libmagic (install on OSX with `brew install libmagic`, or on debian/ubuntu
@@ -21,8 +20,7 @@ Requirements
 * An AWS account
 
 
-Installation
-------------
+# Installation
 
 At the moment
 
@@ -41,8 +39,7 @@ bucket=<your-bucket-name>
 ```
 
 
-Usage
------
+# Usage
 
 The most common usages are probably the following:
 
@@ -71,6 +68,8 @@ gifshare upload /path/to/my.gif kitty-hates-whales
 the correct suffix - one of .gif, .jpeg, or .png. If your file isn't one of
 these types, gifshare will exit with an error.
 
+## See Uploaded Files
+
 You can list all the images you have stored in your S3 bucket with the 'list'
 subcommand:
 
@@ -85,12 +84,6 @@ flag to `list`, which will print out one, random entry:
 gifshare list -r
 ```
 
-You can delete files from your remote store with the `delete` subcommand:
-
-```bash
-gifshare delete surfing-puppiez.gif
-```
-
 If you need the URL for an uploaded file, you can use the `expand` subcommand,
 if you can remember the file name:
 
@@ -99,7 +92,16 @@ $ gifshare expand badger-dance.gif
 http://gifs.ninjarockstar.guru/badger-dance.gif
 ```
 
-### Advanced Usage
+## Delete Files
+
+You can delete files from your remote store with the `delete` subcommand:
+
+```bash
+gifshare delete surfing-puppiez.gif
+```
+
+
+## Advanced Usage
 
 You'll usually want the new URL on your clipboard so you can paste it into your
 IRC channel or wherever. Because gifshare prints out the new URL, you can pipe
