@@ -78,7 +78,8 @@ subcommand:
 gifshare list
 ```
 
-If you're not fussy about which image you want to display, you can use the `-r` flag to `list`, which will print out one, random entry:
+If you're not fussy about which image you want to display, you can use the `-r`
+flag to `list`, which will print out one, random entry:
 
 ```bash
 gifshare list -r
@@ -87,9 +88,16 @@ gifshare list -r
 You can delete files from your remote store with the `delete` subcommand:
 
 ```bash
-gifshare delete surfing-puppiez.jpeg
+gifshare delete surfing-puppiez.gif
 ```
 
+If you need the URL for an uploaded file, you can use the `expand` subcommand,
+if you can remember the file name:
+
+```bash
+$ gifshare expand badger-dance.gif
+http://gifs.ninjarockstar.guru/badger-dance.gif
+```
 
 ### Advanced Usage
 
