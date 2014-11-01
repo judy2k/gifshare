@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+"""
+Command-line interface functionality for gifshare.
+"""
+
 from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
@@ -77,7 +81,9 @@ def main(argv=sys.argv[1:]):
     """
     try:
         a_parser = argparse.ArgumentParser(
-            description=""" gifshare - A command-line tool to upload images to S3. """,
+            description="""
+            gifshare - A command-line tool to upload images to S3.
+            """,
             epilog=FOOTER)
         a_parser.add_argument(
             '--version',

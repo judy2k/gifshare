@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+"""
+Custom exceptions for gifshare.
+"""
+
 from __future__ import absolute_import, print_function, unicode_literals
 
 

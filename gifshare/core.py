@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 
+"""
+Core gifshare functionality.
+"""
+
 from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
-from os.path import expanduser, isfile, basename, splitext
+from os.path import expanduser, basename, splitext
 import re
 
 from six.moves import configparser
@@ -138,5 +142,3 @@ class GifShare(object):
         Obtain a URL for name stored in the bucket.
         """
         return self._bucket.get_url(name)
-
-
