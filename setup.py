@@ -3,6 +3,10 @@
 
 """
 gifshare - A command-line tool to upload images to S3.
+
+Gifshare can copy an image directly from the Web to your S3 bucket. It will
+auto-detect the image type and rename it if necessary. Once the image is in
+your S3 bucket, it supports listing and deletion (more functions coming soon!)
 """
 
 from setuptools import setup
@@ -26,6 +30,7 @@ setup(
         ]
     },
     packages=['gifshare'],
+    keywords="gif s3 aws uploading",
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',
