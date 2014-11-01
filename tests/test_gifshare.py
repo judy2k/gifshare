@@ -4,21 +4,13 @@ import unittest
 from nose.tools import assert_raises
 from mock import MagicMock, patch, call, ANY
 
-import os.path
 from six.moves.configparser import ConfigParser
+
+from .util import *
 
 import gifshare
 import gifshare.cli
 import gifshare.exceptions
-
-
-def _image_path(ext):
-        here = os.path.dirname(__file__)
-        return os.path.join(here, u'fixtures', u'test_image.{}'.format(ext))
-
-
-def _load_image(ext):
-        return open(_image_path(ext), 'rb').read()
 
 
 defaults = {
@@ -41,63 +33,6 @@ def dummy_get(_, key):
 
 config_stub = MagicMock(spec=ConfigParser)
 config_stub.get.side_effect = dummy_get
-
-
-class TestGifShare(unittest.TestCase):
-    def _configure_bucket_instance_mock(self):
-        bucket_instance_mock = MagicMock(name='bucket_instance', spec=gifshare.s3.Bucket)
-        bucket_instance_mock.upload_file.return_value = 'http://dummy.web.root/test_image.png'
-        bucket_instance_mock.upload_contents.return_value = 'http://dummy.web.root/test_image.png'
-
-        return bucket_instance_mock
-
-    def test_upload_file(self):
-        bucket = self._configure_bucket_instance_mock()
-        gs = gifshare.core.GifShare(bucket)
-        url = gs.upload_file(_image_path('png'))
-        bucket.upload_file.assert_called_with(
-            u'test_image.png',
-            u'image/png',
-            _image_path('png'),
-            False
-        )
-        self.assertEqual(url, 'http://dummy.web.root/test_image.png')
-
-    def test_upload_missing_file(self):
-        bucket = self._configure_bucket_instance_mock()
-        gs = gifshare.core.GifShare(bucket)
-        with assert_raises(IOError):
-            gs.upload_file('/tmp/non-existent')
-
-    @patch('gifshare.core.download_file')
-    def test_upload_url(self, download_file_stub):
-        download_file_stub.return_value = _load_image('png')
-        bucket = self._configure_bucket_instance_mock()
-        gs = gifshare.core.GifShare(bucket)
-        url = gs.upload_url(_image_path('png'))
-        bucket.upload_contents.assert_called_with(
-            u'test_image.png',
-            u'image/png',
-            _load_image('png'),
-            False
-        )
-        self.assertEqual(url, 'http://dummy.web.root/test_image.png')
-
-    def test_delete_existing(self):
-        bucket = self._configure_bucket_instance_mock()
-        gs = gifshare.core.GifShare(bucket)
-
-        gs.delete_file('/non-existent/image')
-        bucket.delete_file.assert_called_with('/non-existent/image')
-
-    def test_get_url(self):
-        bucket = self._configure_bucket_instance_mock()
-        bucket.get_url.return_value = 'http://dummy.web.root/test.png'
-        gs = gifshare.core.GifShare(bucket)
-
-        url = gs.get_url('test.png')
-        bucket.get_url.assert_called_with('test.png')
-        self.assertEqual(url, 'http://dummy.web.root/test.png')
 
 
 class TestBucket(unittest.TestCase):
@@ -157,9 +92,9 @@ class TestBucket(unittest.TestCase):
         key_stub.exists.return_value = False
         self.bucket.key_for = MagicMock(name='key_for', return_value=key_stub)
 
-        url = self.bucket.upload_file('test_image.png', 'image/png', _image_path('png'))
+        url = self.bucket.upload_file('test_image.png', 'image/png', image_path('png'))
         key_stub.set_contents_from_filename.assert_called_once_with(
-            os.path.abspath(_image_path('png')),
+            os.path.abspath(image_path('png')),
             cb=ANY
         )
 
@@ -168,7 +103,7 @@ class TestBucket(unittest.TestCase):
         key_stub.exists.return_value = False
         self.bucket.key_for = MagicMock(name='key_for', return_value=key_stub)
 
-        image_data = _load_image('png')
+        image_data = load_image('png')
 
         with patch('gifshare.core.download_file', return_value=image_data):
             dest_url = self.bucket.upload_contents(
@@ -187,7 +122,7 @@ class TestBucket(unittest.TestCase):
         key_stub.exists.return_value = True
         self.bucket.key_for = MagicMock(name='key_for', return_value=key_stub)
 
-        image_data = _load_image('png')
+        image_data = load_image('png')
 
         with patch('gifshare.core.download_file', return_value=image_data):
             with self.assertRaises(gifshare.exceptions.FileAlreadyExists):
@@ -201,7 +136,7 @@ class TestBucket(unittest.TestCase):
         self.bucket.key_for = MagicMock(name='key_for', return_value=key_stub)
 
         with assert_raises(gifshare.exceptions.FileAlreadyExists):
-            self.bucket.upload_file('test_image', 'image/png', _image_path('png'))
+            self.bucket.upload_file('test_image', 'image/png', image_path('png'))
 
     def test_get_url(self):
         key_stub = MagicMock(name='Key')
@@ -242,37 +177,37 @@ class TestBucket(unittest.TestCase):
 class TestExtensionDetection(unittest.TestCase):
     def test_jpeg_path(self):
         self.assertEqual(
-            gifshare.core.correct_ext(_image_path('jpeg')),
+            gifshare.core.correct_ext(image_path('jpeg')),
             'jpeg')
 
     def test_gif_path(self):
         self.assertEqual(
-            gifshare.core.correct_ext(_image_path('gif')),
+            gifshare.core.correct_ext(image_path('gif')),
             'gif')
 
     def test_png_path(self):
         self.assertEqual(
-            gifshare.core.correct_ext(_image_path('png')),
+            gifshare.core.correct_ext(image_path('png')),
             'png')
 
     def test_jpeg(self):
         self.assertEqual(
-            gifshare.core.correct_ext(_load_image('jpeg'), True),
+            gifshare.core.correct_ext(load_image('jpeg'), True),
             'jpeg')
 
     def test_gif(self):
         self.assertEqual(
-            gifshare.core.correct_ext(_load_image('gif'), True),
+            gifshare.core.correct_ext(load_image('gif'), True),
             'gif')
 
     def test_png(self):
         self.assertEqual(
-            gifshare.core.correct_ext(_load_image('png'), True),
+            gifshare.core.correct_ext(load_image('png'), True),
             'png')
 
     def test_unknown_type(self):
         with self.assertRaises(gifshare.core.UnknownFileType):
-            gifshare.core.correct_ext(_load_image('ico'), True)
+            gifshare.core.correct_ext(load_image('ico'), True)
 
 
 class TestMiscellaneousFunctions(unittest.TestCase):
@@ -394,7 +329,7 @@ class TestMain(unittest.TestCase):
     @patch('gifshare.cli.Bucket')
     @patch('gifshare.core.download_file')
     def test_main_upload_url(self, download_file, bucket_mock, load_config_stub):
-        download_file.return_value = _load_image('png')
+        download_file.return_value = load_image('png')
         bucket_instance = MagicMock()
         bucket_mock.return_value = bucket_instance
 
@@ -408,7 +343,7 @@ class TestMain(unittest.TestCase):
         bucket_instance = MagicMock(spec=gifshare.Bucket)
         bucket_mock.return_value = bucket_instance
 
-        gifshare.cli.main(['upload', _image_path('png')])
+        gifshare.cli.main(['upload', image_path('png')])
         self.assertEqual(bucket_mock.call_args, call(config_stub))
         self.assertEqual(bucket_instance.upload_file.call_count, 1)
 
