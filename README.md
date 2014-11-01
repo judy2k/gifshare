@@ -84,6 +84,13 @@ If you're not fussy about which image you want to display, you can use the `-r` 
 gifshare list -r
 ```
 
+You can delete files from your remote store with the `delete` subcommand:
+
+```bash
+gifshare delete surfing-puppiez.jpeg
+```
+
+
 ### Advanced Usage
 
 You'll usually want the new URL on your clipboard so you can paste it into your
