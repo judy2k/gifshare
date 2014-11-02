@@ -67,6 +67,15 @@ class TestGifShare(unittest.TestCase):
         bucket.get_url.assert_called_with('test.png')
         self.assertEqual(url, 'http://dummy.web.root/test.png')
 
+    @patch('webbrowser.open_new')
+    def test_show(self, open_new):
+        bucket = self._configure_bucket_instance_mock()
+        bucket.get_url.return_value = 'http://dummy.web.root/test.png'
+        gs = gifshare.core.GifShare(bucket)
+
+        gs.show('test.png')
+        open_new.assert_called_with('http://dummy.web.root/test.png')
+
 
 class TestExtensionDetection(unittest.TestCase):
     def test_jpeg_path(self):

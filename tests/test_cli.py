@@ -96,3 +96,11 @@ class TestMain(unittest.TestCase):
         result = gifshare.cli.main(['expand', 'test.png'])
         bucket_mock.return_value.get_url.assert_called_with('test.png')
         self.assertEqual(result, 0)
+
+    @patch('gifshare.cli.load_config', return_value=config_stub)
+    @patch('gifshare.cli.Bucket', spec=gifshare.cli.Bucket)
+    @patch('webbrowser.open_new')
+    def test_main_show(self, open_new_mock, bucket_mock, load_config_stub):
+        result = gifshare.cli.main(['show', 'test.png'])
+        bucket_mock.return_value.get_url.assert_called_with('test.png')
+        self.assertEqual(result, 0)

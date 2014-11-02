@@ -9,6 +9,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import logging
 from os.path import expanduser, basename, splitext
 import re
+import webbrowser
 
 from six.moves import configparser
 from six import StringIO
@@ -142,3 +143,9 @@ class GifShare(object):
         Obtain a URL for name stored in the bucket.
         """
         return self._bucket.get_url(name)
+
+    def show(self, name):
+        """
+        Display the image with `name` in the user's browser.
+        """
+        webbrowser.open_new(self.get_url(name))

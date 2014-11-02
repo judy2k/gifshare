@@ -72,6 +72,10 @@ def command_expand(arguments, config):
     print(bucket.get_url(arguments.path))
 
 
+def command_show(arguments, config):
+    GifShare(Bucket(config)).show(arguments.path)
+
+
 def main(argv=sys.argv[1:]):
     """
     The entry-point for command-line execution.
@@ -148,6 +152,16 @@ def main(argv=sys.argv[1:]):
             help="The name of the uploaded file."
         )
         expand_parser.set_defaults(target=command_expand)
+
+        show_parser = subparsers.add_parser(
+            "show",
+            help="Display a remote image in the browser."
+        )
+        show_parser.add_argument(
+            'path',
+            help="The name of the uploaded file."
+        )
+        show_parser.set_defaults(target=command_show)
 
         arguments = a_parser.parse_args(argv)
         config = load_config()
