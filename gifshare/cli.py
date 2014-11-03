@@ -73,6 +73,10 @@ def command_expand(arguments, config):
 
 
 def command_show(arguments, config):
+    """
+    Open the user's browser to display the image at the remote path specified
+    in arguments.path.
+    """
     GifShare(Bucket(config)).show(arguments.path)
 
 
