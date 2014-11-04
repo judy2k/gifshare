@@ -149,3 +149,9 @@ class GifShare(object):
         Display the image with `name` in the user's browser.
         """
         webbrowser.open_new(self.get_url(name))
+
+    def grep(self, pattern):
+        """
+        Return a list of all URLs containing `pattern`.
+        """
+        return list(self._bucket.grep(pattern))

@@ -76,6 +76,16 @@ class TestGifShare(unittest.TestCase):
         gs.show('test.png')
         open_new.assert_called_with('http://dummy.web.root/test.png')
 
+    def test_grep(self):
+        bucket = self._configure_bucket_instance_mock()
+        bucket.grep.return_value = [
+            'http://dummy.web.root/image1.jpeg',
+            'http://dummy.web.root/image2.jpeg',
+        ]
+        gs = gifshare.core.GifShare(bucket)
+        gs.grep('pattern')
+        bucket.grep.assert_called_with('pattern')
+
 
 class TestExtensionDetection(unittest.TestCase):
     def test_jpeg_path(self):
