@@ -80,6 +80,14 @@ def command_show(arguments, config):
     GifShare(Bucket(config)).show(arguments.path)
 
 
+def command_grep(arguments, config):
+    """
+    List matching remote images.
+    """
+    for url in GifShare(Bucket(config)).grep(arguments.pattern):
+        print(url)
+
+
 def main(argv=sys.argv[1:]):
     """
     The entry-point for command-line execution.
@@ -166,6 +174,16 @@ def main(argv=sys.argv[1:]):
             help="The name of the uploaded file."
         )
         show_parser.set_defaults(target=command_show)
+
+        grep_parser = subparsers.add_parser(
+            "grep",
+            help="List matching uploaded files."
+        )
+        grep_parser.add_argument(
+            'pattern',
+            help="Part of the filename."
+        )
+        grep_parser.set_defaults(target=command_grep)
 
         arguments = a_parser.parse_args(argv)
         config = load_config()

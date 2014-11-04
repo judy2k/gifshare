@@ -104,3 +104,14 @@ class TestMain(unittest.TestCase):
         result = gifshare.cli.main(['show', 'test.png'])
         bucket_mock.return_value.get_url.assert_called_with('test.png')
         self.assertEqual(result, 0)
+
+    @patch('gifshare.cli.load_config', return_value=config_stub)
+    @patch('gifshare.cli.Bucket', spec=gifshare.cli.Bucket)
+    def test_main_grep(self, bucket_mock, load_config_stub):
+        bucket_mock.return_value.grep.return_value = [
+            'http://dummy.web.root/image1.jpeg',
+            'http://dummy.web.root/image2.jpeg',
+        ]
+        result = gifshare.cli.main(['grep', 'test'])
+        bucket_mock.return_value.grep.assert_called_with('test')
+        self.assertEqual(result, 0)

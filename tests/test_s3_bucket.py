@@ -171,6 +171,26 @@ class TestBucket(unittest.TestCase):
         self.bucket.delete_file('/non-existant/image')
         key_stub.delete.assert_not_called()
 
+    def test_grep(self):
+        # Patch S3Connection and its get_bucket method:
+        with patch('gifshare.s3.S3Connection',
+                   name='S3Connection') as MockS3Connection:
+            mock_get_bucket = MagicMock(name='get_bucket')
+            mock_bucket = MagicMock(name='bucket')
+            mock_get_bucket.return_value = mock_bucket
+            mock_bucket.list.return_value = [
+                DummyKey('bunny-image.jpeg'),
+                DummyKey('kitten-image.jpeg'),
+                DummyKey('my-kittenz.jpeg')
+            ]
+            MockS3Connection.return_value.get_bucket = mock_get_bucket
+
+            results = list(self.bucket.grep('kitten'))
+            self.assertEqual(results, [
+                'http://dummy.web.root/kitten-image.jpeg',
+                'http://dummy.web.root/my-kittenz.jpeg',
+            ])
+
 
 @patch('gifshare.s3.progressbar.ProgressBar')
 class TestUploadCallback(unittest.TestCase):

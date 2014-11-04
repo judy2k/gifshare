@@ -94,6 +94,16 @@ $ gifshare expand badger-dance.gif
 http://gifs.ninjarockstar.guru/badger-dance.gif
 ```
 
+If you can't remember the exact filename, you can use `grep` which searches
+for text anywhere in the filename:
+
+```bash
+$ gifshare grep ger
+http://gifs.ninjarockstar.guru/badger-dance.gif
+http://gifs.ninjarockstar.guru/germans-are-coming.gif
+http://gifs.ninjarockstar.guru/gerunds.gif
+```
+
 ## Delete Files
 
 You can delete files from your remote store with the `delete` subcommand:

@@ -157,3 +157,11 @@ class Bucket(object):
             return self._web_root + name
         else:
             raise MissingFile("The image '%s' does not exist" % name)
+
+    def grep(self, pattern):
+        """
+        Yielding URLs where the filename matches `pattern`.
+        """
+        for key in self.bucket.list():
+            if pattern in key.name:
+                yield self._web_root + key.name
