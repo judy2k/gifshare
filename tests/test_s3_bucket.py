@@ -34,9 +34,6 @@ class DummyKey(object):
 
 
 class TestBucket(unittest.TestCase):
-    def setUp(self):
-        self.bucket = gifshare.s3.Bucket(config_stub)
-
     def test_bucket(self):
         # Patch S3Connection and its get_bucket method:
         with patch('gifshare.s3.S3Connection',
@@ -44,6 +41,7 @@ class TestBucket(unittest.TestCase):
             mock_get_bucket = MagicMock(name='get_bucket')
             MockS3Connection.return_value.get_bucket = mock_get_bucket
 
+            self.bucket = gifshare.s3.Bucket(config_stub)
             _ = self.bucket.bucket
 
             # Ensure the config is passed correctly to S3Connection
@@ -56,6 +54,7 @@ class TestBucket(unittest.TestCase):
         with patch('gifshare.s3.S3Connection',
                    name='S3Connection'):
             with patch('gifshare.s3.Key') as key_mock:
+                self.bucket = gifshare.s3.Bucket(config_stub)
                 k = self.bucket.key_for('abc.gif', 'image/gif')
                 key_mock.assert_called_with(self.bucket.bucket, 'abc.gif')
                 self.assertEqual(k.content_type, 'image/gif')
@@ -73,6 +72,7 @@ class TestBucket(unittest.TestCase):
             ]
             MockS3Connection.return_value.get_bucket = mock_get_bucket
 
+            self.bucket = gifshare.s3.Bucket(config_stub)
             keys = list(self.bucket.list())
 
             self.assertEqual(keys, [
@@ -88,6 +88,7 @@ class TestBucket(unittest.TestCase):
     def test_upload_file(self):
         key_stub = MagicMock(name='Key')
         key_stub.exists.return_value = False
+        self.bucket = gifshare.s3.Bucket(config_stub)
         self.bucket.key_for = MagicMock(name='key_for', return_value=key_stub)
 
         url = self.bucket.upload_file('test_image.png', 'image/png', image_path('png'))
@@ -99,6 +100,7 @@ class TestBucket(unittest.TestCase):
     def test_upload_contents(self):
         key_stub = MagicMock(name='Key')
         key_stub.exists.return_value = False
+        self.bucket = gifshare.s3.Bucket(config_stub)
         self.bucket.key_for = MagicMock(name='key_for', return_value=key_stub)
 
         image_data = load_image('png')
@@ -118,6 +120,7 @@ class TestBucket(unittest.TestCase):
     def test_upload_url_existing_file(self):
         key_stub = MagicMock(name='thing.png')
         key_stub.exists.return_value = True
+        self.bucket = gifshare.s3.Bucket(config_stub)
         self.bucket.key_for = MagicMock(name='key_for', return_value=key_stub)
 
         image_data = load_image('png')
@@ -131,6 +134,7 @@ class TestBucket(unittest.TestCase):
     def test_upload_existing_file(self):
         key_stub = MagicMock(name='Key')
         key_stub.exists.return_value = True
+        self.bucket = gifshare.s3.Bucket(config_stub)
         self.bucket.key_for = MagicMock(name='key_for', return_value=key_stub)
 
         with assert_raises(gifshare.exceptions.FileAlreadyExists):
@@ -139,6 +143,7 @@ class TestBucket(unittest.TestCase):
     def test_get_url(self):
         key_stub = MagicMock(name='Key')
         key_stub.exists.return_value = True
+        self.bucket = gifshare.s3.Bucket(config_stub)
         self.bucket.key_for = MagicMock(name='key_for', return_value=key_stub)
 
         url = self.bucket.get_url('test.png')
@@ -149,6 +154,7 @@ class TestBucket(unittest.TestCase):
     def test_missing_get_url(self):
         key_stub = MagicMock(name='Key')
         key_stub.exists.return_value = False
+        self.bucket = gifshare.s3.Bucket(config_stub)
         self.bucket.key_for = MagicMock(name='key_for', return_value=key_stub)
 
         with self.assertRaises(gifshare.exceptions.MissingFile):
@@ -157,6 +163,7 @@ class TestBucket(unittest.TestCase):
     def test_delete_existing(self):
         key_stub = MagicMock(name='Key')
         key_stub.exists.return_value = True
+        self.bucket = gifshare.s3.Bucket(config_stub)
         self.bucket.key_for = MagicMock(name='key_for', return_value=key_stub)
 
         self.bucket.delete_file('/non-existant/image')
@@ -166,6 +173,7 @@ class TestBucket(unittest.TestCase):
     def test_delete_missing(self, stderr_stub):
         key_stub = MagicMock(name='Key')
         key_stub.exists.return_value = False
+        self.bucket = gifshare.s3.Bucket(config_stub)
         self.bucket.key_for = MagicMock(name='key_for', return_value=key_stub)
 
         self.bucket.delete_file('/non-existant/image')
@@ -185,6 +193,7 @@ class TestBucket(unittest.TestCase):
             ]
             MockS3Connection.return_value.get_bucket = mock_get_bucket
 
+            self.bucket = gifshare.s3.Bucket(config_stub)
             results = list(self.bucket.grep('kitten'))
             self.assertEqual(results, [
                 'http://dummy.web.root/kitten-image.jpeg',
