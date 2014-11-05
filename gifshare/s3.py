@@ -188,17 +188,13 @@ class Bucket(object):
                 }
             ]
         }))
+
         error_key = Key(bucket, 'error.html')
         error_key.content_type = "text/html"
         error_key.set_contents_from_string("""
         <!doctype html>
         <h1>It's all gone wrong!
         """)
-        error_key.make_public()
-        bucket.set_website_configuration(WebsiteConfiguration(
-            'index.html',
-            'error.html',
-        ))
 
         index_key = Key(bucket, "index.html")
         index_key.content_type = "text/html"
@@ -206,6 +202,8 @@ class Bucket(object):
         <!doctype html>
         <h1>Welcome to gifshare
         """)
-        index_key.make_public()
 
-        # self._connection.delete_bucket(self._bucket_name)
+        bucket.set_website_configuration(WebsiteConfiguration(
+            'index.html',
+            'error.html',
+        ))
