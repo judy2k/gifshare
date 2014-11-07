@@ -6,14 +6,17 @@ Functionality specific to Amazon S3 storage.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import json
 import logging
 import sys
 
 from boto.s3.key import Key
 from boto.s3.connection import S3Connection
+from boto.s3.website import WebsiteConfiguration
 
 import progressbar
 
+from .core import load_config
 from .exceptions import FileAlreadyExists, MissingFile
 
 
@@ -60,12 +63,16 @@ class Bucket(object):
     * web_root
     """
 
-    def __init__(self, config):
+    def __init__(self, config=None):
+        if config is None:
+            config = load_config()
         self._bucket = None
         self._key_id = config.get('default', 'aws_access_id')
         self._access_key = config.get('default', 'aws_secret_access_key')
         self._bucket_name = config.get('default', 'bucket')
         self._web_root = config.get('default', 'web_root')
+
+        self._connection = S3Connection(self._key_id, self._access_key)
 
     @property
     def bucket(self):
@@ -74,8 +81,7 @@ class Bucket(object):
         """
 
         if not self._bucket:
-            conn = S3Connection(self._key_id, self._access_key)
-            self._bucket = conn.get_bucket(self._bucket_name)
+            self._bucket = self._connection.get_bucket(self._bucket_name)
         return self._bucket
 
     def key_for(self, filename, content_type=None):
@@ -165,3 +171,39 @@ class Bucket(object):
         for key in self.bucket.list():
             if pattern in key.name:
                 yield self._web_root + key.name
+
+    def init_bucket(self):
+        bucket = self._connection.create_bucket(self._bucket_name)
+        bucket.set_policy(json.dumps({
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Sid": "PublicReadGetObject",
+                    "Effect": "Allow",
+                    "Principal": "*",
+                    "Action": ["s3:GetObject"],
+                    "Resource": [
+                        "arn:aws:s3:::{bucket}/*".format(
+                            bucket=self._bucket_name)]
+                }
+            ]
+        }))
+
+        error_key = Key(bucket, 'error.html')
+        error_key.content_type = "text/html"
+        error_key.set_contents_from_string("""
+        <!doctype html>
+        <h1>It's all gone wrong!
+        """)
+
+        index_key = Key(bucket, "index.html")
+        index_key.content_type = "text/html"
+        index_key.set_contents_from_string("""
+        <!doctype html>
+        <h1>Welcome to gifshare
+        """)
+
+        bucket.set_website_configuration(WebsiteConfiguration(
+            'index.html',
+            'error.html',
+        ))
